@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e2233">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="style.css">
+<title>Piazzale</title>
+</head>
+<body data-vista="home">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-in" viewBox="0 0 24 24"><path d="M3 12h10M9 8l4 4-4 4M14 4h5a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-5"/></symbol>
+  <symbol id="i-out" viewBox="0 0 24 24"><path d="M10 12h11M17 8l4 4-4 4M10 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h5"/></symbol>
+  <symbol id="i-giro" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.5-4.5M8.5 11l2 2 3.5-4"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-3-7z"/></symbol>
+  <symbol id="i-cam" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13" r="3.5"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17v.5"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 3L5 14h6l-1 7 8-11h-6z"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+  <symbol id="i-truck" viewBox="0 0 24 24"><path d="M2 6h11v10H2zM13 9.5h4l3.5 3.5V16H13z"/><circle cx="6" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></symbol>
+</svg>
+
+<header>
+  <button id="btn-indietro" class="ib" hidden aria-label="Indietro"><svg class="ic"><use href="#i-back"/></svg></button>
+  <svg id="logo" class="ic logo"><use href="#i-truck"/></svg>
+  <h1 id="titolo">Piazzale</h1>
+  <span id="contatore" class="pill"></span>
+</header>
+
+<main>
+  <!-- HOME -->
+  <section id="v-home" class="vista">
+    <div class="stats">
+      <div class="stat"><b id="st-piazzale">0</b><span>in piazzale</span></div>
+      <div class="stat"><b id="st-attese">0</b><span>uscite attese</span></div>
+      <div class="stat"><b id="st-oggi">0</b><span>movimenti</span></div>
+    </div>
+    <div class="tiles">
+      <button class="tile t-in" data-vai="ingresso"><svg class="ic"><use href="#i-in"/></svg><strong>Ingresso</strong><small>Registra un arrivo</small></button>
+      <button class="tile t-out" data-vai="uscita"><svg class="ic"><use href="#i-out"/></svg><span class="bd-t" id="bd-uscita">0</span><strong>Uscita</strong><small>Verifica e consegna</small></button>
+      <button class="tile t-giro" data-vai="giro"><svg class="ic"><use href="#i-giro"/></svg><span class="bd-t" id="bd-giro">0</span><strong>Giro piazzale</strong><small>Controllo targhe</small></button>
+      <button class="tile t-end" data-vai="invio"><svg class="ic"><use href="#i-send"/></svg><strong>Chiudi giornata</strong><small>Riepilogo e invio</small></button>
+    </div>
+    <p class="nota">Prototipo dimostrativo · dati inventati · restano sul telefono</p>
+  </section>
+
+  <!-- INGRESSO -->
+  <section id="v-ingresso" class="vista" hidden>
+    <div class="passo"><span class="n">1</span>Conducente e trattore</div>
+    <div id="freq" class="chips"></div>
+    <input id="in-aut" class="inp" placeholder="Cerca conducente (cognome)" autocomplete="off">
+    <div class="campo-targa sotto">
+      <div class="targa-box"><input id="in-tra" class="inp-targa" placeholder="FG456HJ" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false"></div>
+      <button class="btn-q jolly" data-jolly="in-tra" aria-label="Lettera illeggibile">?</button>
+      <button class="btn-q cam" data-scan="in-tra" aria-label="Leggi la targa con la fotocamera"><svg class="ic"><use href="#i-cam"/></svg></button>
+    </div>
+    <div id="sugg-tra" class="sugg"></div>
+
+    <div class="passo"><span class="n">2</span>Rimorchio</div>
+    <div class="campo-targa">
+      <div class="targa-box"><input id="in-rim" class="inp-targa" placeholder="XB123CD" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false"></div>
+      <button class="btn-q jolly" data-jolly="in-rim" aria-label="Lettera illeggibile">?</button>
+      <button class="btn-q cam" data-scan="in-rim" aria-label="Leggi la targa con la fotocamera"><svg class="ic"><use href="#i-cam"/></svg></button>
+    </div>
+    <p class="aiuto">Targa rovinata? Scrivi solo le ultime cifre, oppure tocca <b>?</b> per una lettera illeggibile.</p>
+    <div id="stato-rim" class="stato" hidden></div>
+    <div id="sugg-rim" class="sugg"></div>
+
+    <div class="scheda">
+      <button class="scheda-testa" id="scheda-testa" aria-expanded="false" aria-controls="scheda-corpo">
+        <span class="n">3</span><span class="scheda-tit">Danni</span><span id="danni-stato" class="scheda-stato avv">Da indicare</span><svg class="ic chev"><use href="#i-next"/></svg>
+      </button>
+      <div id="scheda-corpo" hidden>
+    <div class="scelta">
+      <button id="dn-no" class="sc no">Nessun danno</button>
+      <button id="dn-si" class="sc si">Segna danni</button>
+    </div>
+    <div id="blocco-danni" hidden>
+      <div class="sagoma-box">
+        <div id="viste-tab" class="viste-tab" role="tablist"></div>
+        <div id="sagome"></div>
+        <p class="aiuto centro">Tocca la parte danneggiata. I numeri sono quelli dello schema.</p>
+      </div>
+      <div id="lista-danni"></div>
+      <button class="cta-sec" id="btn-foto"><svg class="ic"><use href="#i-cam"/></svg>Aggiungi foto dei danni</button>
+      <input type="file" id="file-foto" accept="image/*" capture="environment" hidden>
+      <div id="foto-prev" class="foto-prev"></div>
+    </div>
+      </div>
+    </div>
+
+    <button class="cta" id="btn-salva-ingresso" disabled><svg class="ic"><use href="#i-check"/></svg>Registra ingresso</button>
+    <p class="hint-cta" id="hint-cta"></p>
+  </section>
+
+  <!-- USCITA -->
+  <section id="v-uscita" class="vista" hidden>
+    <div class="campo-targa">
+      <div class="targa-box"><input id="ex-cerca" class="inp-targa" placeholder="CERCA" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false"></div>
+      <button class="btn-q jolly" data-jolly="ex-cerca" aria-label="Lettera illeggibile">?</button>
+      <button class="btn-q cam" data-scan="ex-cerca" aria-label="Leggi la targa con la fotocamera"><svg class="ic"><use href="#i-cam"/></svg></button>
+    </div>
+    <p class="aiuto">Bastano le ultime cifre. Oppure tocca direttamente la riga.</p>
+    <div id="ex-esito"></div>
+    <div class="titolo-sez"><span>Uscite attese oggi</span><span id="ex-cont"></span></div>
+    <div id="attese"></div>
+  </section>
+
+  <!-- GIRO -->
+  <section id="v-giro" class="vista" hidden>
+    <div class="prog-txt"><span id="gi-testo">0 di 0 controllati</span><span id="gi-mancano"></span></div>
+    <div class="prog"><div id="gi-barra"></div></div>
+    <div class="campo-targa sotto">
+      <div class="targa-box"><input id="gi-cerca" class="inp-targa" placeholder="CERCA" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false"></div>
+      <button class="btn-q jolly" data-jolly="gi-cerca" aria-label="Lettera illeggibile">?</button>
+      <button class="btn-q cam" data-scan="gi-cerca" aria-label="Leggi la targa con la fotocamera"><svg class="ic"><use href="#i-cam"/></svg></button>
+    </div>
+    <div id="gi-azione"></div>
+    <div id="giro-lista"></div>
+    <div id="giro-intrusi"></div>
+  </section>
+
+  <!-- INVIO -->
+  <section id="v-invio" class="vista" hidden>
+    <div id="riepilogo" class="card"></div>
+    <button class="cta" id="btn-invia"><svg class="ic"><use href="#i-send"/></svg>Invia report</button>
+    <p class="nota" id="esito-invio"></p>
+    <button class="cta-sec" id="btn-reset">Azzera i dati demo</button>
+  </section>
+</main>
+
+<div id="scan" hidden>
+  <video id="video" playsinline autoplay muted></video>
+  <div class="scan-top">
+    <button id="btn-chiudi-scan" class="ib dark" aria-label="Chiudi"><svg class="ic"><use href="#i-x"/></svg></button>
+    <button id="btn-torcia" class="ib dark" hidden aria-label="Torcia"><svg class="ic"><use href="#i-bolt"/></svg></button>
+  </div>
+  <div class="mirino"><span></span><span></span><span></span><span></span></div>
+  <p id="scan-msg">Inquadra la targa nel riquadro</p>
+  <button class="cta" id="btn-scatta"><svg class="ic"><use href="#i-cam"/></svg>Leggi targa</button>
+</div>
+
+<div id="sheet" class="sheet" hidden>
+  <div class="sheet-bg"></div>
+  <div class="sheet-box" id="sheet-box"></div>
+</div>
+<div id="toast" class="toast" hidden></div>
+
+<script src="match.js"></script>
+<script src="sagoma.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
