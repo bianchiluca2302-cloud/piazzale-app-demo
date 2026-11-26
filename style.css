@@ -93,6 +93,18 @@ main { padding: 24px 14px 40px; }
 .scheda-testa[aria-expanded=true] .chev { transform: rotate(90deg); }
 #scheda-corpo { padding: 0 12px 12px; }
 .hint-cta.apri { color: var(--ink); font-weight: 700; text-decoration: underline; cursor: pointer; }
+.varco { margin-bottom: 14px; }
+.varco .cta-sec { margin-top: 0; }
+.varco-card { margin-top: 10px; border: 3px solid var(--line); border-radius: 14px; overflow: hidden; background: #fff; }
+.varco-card.ko { border-color: var(--rosso); }
+.varco-card.ok { border-color: var(--verde); }
+.varco-img { display: block; width: 100%; height: auto; }
+.varco-tit { margin: 0; padding: 10px 12px 4px; font-weight: 700; font-size: 16px; }
+.varco-az { display: flex; gap: 8px; padding: 8px 12px 12px; }
+.varco-b { flex: 1; min-height: 52px; background: #fff; border: 3px solid var(--ink); border-radius: 12px; font-size: 16px; font-weight: 700; }
+.varco-b.ko { background: var(--rosso); border-color: var(--rosso); color: #fff; }
+.varco-b.ok { background: var(--verde); border-color: var(--verde); color: #fff; }
+.varco-fatto { margin: 10px 0 0; padding: 9px 12px; border-radius: 10px; background: #d9f0e2; color: #0d5128; font-weight: 600; font-size: 15px; }
 .scelta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .sc { min-height: 64px; background: #fff; border: 3px solid var(--line); border-radius: 14px; font-size: 18px; font-weight: 700; }
 .sc.on.no { background: var(--verde); border-color: var(--verde); color: #fff; }

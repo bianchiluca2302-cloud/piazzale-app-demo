@@ -181,6 +181,42 @@ function scegliDanno(si) {
   if (!si) { Object.keys(danni).forEach(k => { delete danni[k]; segnaZona(k); }); foto = []; $('foto-prev').replaceChildren(); disegnaDanni(); }
   aggiornaCta();
 }
+// Controllo del varco (simulato): la macchina propone, l'operatore conferma. Solo problemi evidenti, niente ammaccature piccole.
+let varcoN = 0;
+function immagineVarco(taglio) {
+  const svg = mk('svg', { viewBox: '0 0 360 120', role: 'img', 'aria-label': taglio ? 'Fiancata con telo tagliato' : 'Fiancata senza problemi' }, 'varco-img');
+  [['rect', { x: 0, y: 0, width: 360, height: 120, fill: '#2b3640' }],
+   ['rect', { x: 14, y: 14, width: 332, height: 78, rx: 4, fill: '#6f8aa3' }],
+   ['line', { x1: 14, y1: 40, x2: 346, y2: 40, stroke: '#5b748b', 'stroke-width': 2 }],
+   ['line', { x1: 14, y1: 66, x2: 346, y2: 66, stroke: '#5b748b', 'stroke-width': 2 }],
+   ['circle', { cx: 70, cy: 100, r: 12, fill: '#111' }], ['circle', { cx: 110, cy: 100, r: 12, fill: '#111' }],
+   ['circle', { cx: 290, cy: 100, r: 12, fill: '#111' }]].forEach(([t, a]) => svg.append(mk(t, a)));
+  if (taglio) {
+    svg.append(mk('path', { d: 'M168 22L180 38L172 50L186 64L176 86', fill: 'none', stroke: '#1b1f24', 'stroke-width': 7, 'stroke-linejoin': 'round' }));
+    svg.append(mk('rect', { x: 146, y: 14, width: 62, height: 78, rx: 4, fill: 'none', stroke: '#ff3b30', 'stroke-width': 3, 'stroke-dasharray': '7 4' }));
+  }
+  return svg;
+}
+function mostraVarco() {
+  const taglio = varcoN++ % 2 === 0, box = $('varco-esito'); box.replaceChildren();
+  const c = el('div', 'varco-card ' + (taglio ? 'ko' : 'ok'));
+  c.append(immagineVarco(taglio), el('p', 'varco-tit', taglio ? 'Problema evidente: telo tagliato sul lato A' : 'Nessun problema evidente'));
+  const az = el('div', 'varco-az');
+  if (taglio) {
+    az.append(
+      bottone('varco-b ko', 'Confermo il danno', () => {
+        const k = 15; // provvisorio: zona centrale del lato A, il codice del telo non e' sul foglio
+        scegliDanno(true); if (!(k in danni)) toccaZona(k);
+        danni[k] = 'Rottura'; disegnaDanni(); aggiornaCta();
+        box.replaceChildren(el('p', 'varco-fatto', 'Danno confermato: telo tagliato (zona ' + k + ', tipo Rottura)'));
+      }),
+      bottone('varco-b', 'Falso allarme', () => { scegliDanno(false); box.replaceChildren(el('p', 'varco-fatto', 'Falso allarme: nessun danno')); }));
+  } else {
+    az.append(bottone('varco-b ok', 'Confermo: nessun danno', () => { scegliDanno(false); box.replaceChildren(el('p', 'varco-fatto', 'Confermato: nessun danno')); }));
+  }
+  c.append(az); box.append(c);
+}
+$('btn-varco').onclick = mostraVarco;
 $('dn-no').onclick = () => scegliDanno(false);
 $('dn-si').onclick = () => scegliDanno(true);
 
