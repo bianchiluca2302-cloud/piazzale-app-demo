@@ -348,7 +348,7 @@ function statoDanni() {
   const n = Object.keys(danni).length, s = $('danni-stato');
   if (dannoScelta === 'no') { s.textContent = 'Nessun danno'; s.className = 'scheda-stato ok'; }
   else if (dannoScelta === 'si' && n) { s.textContent = n + (n === 1 ? ' danno' : ' danni'); s.className = 'scheda-stato ko'; }
-  else { s.textContent = 'Da indicare'; s.className = 'scheda-stato avv'; }
+  else { s.textContent = ''; s.className = 'scheda-stato'; }
 }
 $('scheda-testa').onclick = () => impostaScheda($('scheda-corpo').hidden);
 $('hint-cta').onclick = () => {
