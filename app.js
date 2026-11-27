@@ -369,16 +369,22 @@ function filtraUscita() {
     b.onclick = () => { if (!uscito(it.p)) apriUscita(it.a); };
     lista.append(b);
   });
-  // Ritiri per ditta: rimorchi in piazzale che una ditta puo' far ritirare a un conducente della sua lista, senza data
+  // Ritiro per ditta: l'operatore riconosce la ditta (dal telo o dalla scritta sul rimorchio) e la sceglie.
+  // Se la targa e' nelle liste delle ditte, la ricerca porta dritti alla ditta giusta.
   const dit = S.piazzale.filter(p => dittaDi(p.rim) && !ATTESE.some(a => a.rim === p.rim)).map(p => ({ p: p.rim, d: dittaDi(p.rim) }));
-  const rd = filtra ? trova(q, dit) : dit.map(it => ({ it, s: 0 }));
-  $('dt-cont').textContent = dit.length + ' in piazzale';
-  $('dt-sez').hidden = !dit.length;
-  rd.forEach(({ it, s }) => {
+  const rd = filtra ? trova(q, dit) : [];
+  $('dt-cont').textContent = DITTE.length + ' ditte';
+  if (filtra) rd.forEach(({ it, s }) => {
     const b = el('button', 'card att'), d = el('div', 'dett');
-    d.append(el('b', '', it.d.n), el('small', '', 'Rif. ' + it.d.rif + (filtra && s ? ' · ' + motivo(s) : '')));
+    d.append(el('b', '', it.d.n), el('small', '', 'Rif. ' + it.d.rif + (s ? ' · ' + motivo(s) : '')));
     b.append(targaEl(it.p), d, ico('next'));
-    b.onclick = () => apriUscitaDitta(it.p, it.d);
+    b.onclick = () => apriDitta(it.d, it.p);
+    dl.append(b);
+  }); else DITTE.forEach(dt => {
+    const b = el('button', 'card att ditta'), d = el('div', 'dett');
+    d.append(el('b', '', dt.n), el('small', '', dt.conducenti.length + ' conducenti delegati'));
+    b.append(ico('truck'), d, ico('next'));
+    b.onclick = () => apriDitta(dt);
     dl.append(b);
   });
   if (normJolly(q).length >= 3 && !righe.length && !rd.length) {
@@ -396,26 +402,37 @@ function apriUscita(att) {
     bottone('cta-sec', 'Si presenta un altro conducente', () => apriDiverso(att)),
     bottone('cta-sec', 'Annulla', chiudiSheet));
 }
-// Ritiro per ditta: si sceglie chi si presenta tra i conducenti delegati; chi non e' in lista esce segnalato
-function apriUscitaDitta(rim, d) {
-  let scelto = '';
-  const ok = bottone('cta verde', 'Conferma uscita', () => confermaUscita({ rim, chi: d.n + ' (delega)', rif: d.rif }, scelto, ''), 'check');
-  ok.disabled = true;
-  const ch = el('div', 'chips');
-  d.conducenti.forEach(n => {
-    const c = bottone('chip', n, () => { scelto = n; ch.querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x === c)); ok.disabled = false; });
-    ch.append(c);
-  });
-  apriSheet(el('div', 'sheet-tit', 'Controlla i documenti'), targaEl(rim, 'grande'), dato('Ditta', d.n), dato('Riferimento', d.rif),
-    el('div', 'sheet-sez', 'Chi si presenta?'), ch, ok,
-    bottone('cta-sec', 'Non è nella lista', () => apriFuoriLista(rim, d)), bottone('cta-sec', 'Annulla', chiudiSheet));
-}
-function apriFuoriLista(rim, d) {
-  const ban = el('div', 'banner arancio', '⚠ Conducente non in lista'); ban.append(el('small', '', d.n + ' · rif. ' + d.rif));
-  const inp = el('input', 'inp'); inp.placeholder = 'Cognome Nome di chi si presenta';
-  const ok = bottone('cta arancio', 'Conferma uscita fuori lista', () => confermaUscita({ rim, chi: d.n + ' (delega)', rif: d.rif }, inp.value.trim(), 'conducente non in lista'), 'warn');
-  ok.disabled = true; inp.oninput = () => ok.disabled = !inp.value.trim();
-  apriSheet(ban, el('div', 'sheet-tit', 'Chi si presenta?'), inp, ok, bottone('cta-sec', 'Indietro', () => apriUscitaDitta(rim, d)));
+// Ritiro per ditta: ditta scelta dall'operatore, poi targa del rimorchio (in piazzale) e conducente tra i delegati.
+// Chi non e' in lista, o un rimorchio che nelle liste risulta di un'altra ditta, esce segnalato.
+function apriDitta(d, rim0 = '') {
+  let chi = '', fuori = false;
+  const nota = el('div'), inp = el('input', 'inp'), sug = el('div', 'sugg'), drv = el('div', 'chips'), altro = el('input', 'inp');
+  inp.placeholder = 'Targa del rimorchio'; inp.autocapitalize = 'characters'; inp.value = rim0;
+  altro.placeholder = 'Cognome Nome di chi si presenta'; altro.hidden = true;
+  const ok = bottone('cta verde', 'Conferma uscita', () => {
+    const rim = norm(inp.value), a = dittaDi(rim), fl = [];
+    if (fuori) fl.push('conducente non in lista');
+    if (a && a !== d) fl.push('rimorchio di ' + a.n);
+    confermaUscita({ rim, chi: d.n + ' (delega)', rif: d.rif }, fuori ? altro.value.trim() : chi, fl.join(' · '));
+  }, 'check');
+  const agg = () => {
+    const rim = norm(inp.value), inP = S.piazzale.some(p => p.rim === rim), a = dittaDi(rim);
+    nota.replaceChildren();
+    if (rim.length >= 5 && !inP) nota.append(el('div', 'banner rosso', '✖ Questo rimorchio non risulta in piazzale'));
+    else if (inP && a && a !== d) nota.append(el('div', 'banner arancio', '⚠ Nelle liste questo rimorchio risulta di ' + a.n));
+    ok.disabled = !(inP && (fuori ? altro.value.trim() : chi));
+    ok.className = 'cta ' + ((fuori || (a && a !== d)) ? 'arancio' : 'verde');
+  };
+  const chips = el('div', 'chips');
+  d.rim.filter(r => S.piazzale.some(p => p.rim === r)).forEach(r => chips.append(bottone('chip', r, () => { inp.value = r; sug.replaceChildren(); agg(); })));
+  inp.oninput = () => { suggerisci(sug, inp.value, S.piazzale.map(p => ({ p: p.rim })), it => { inp.value = it.p; sug.replaceChildren(); agg(); }); agg(); };
+  const scegli = (c, nome) => { chi = nome; fuori = false; altro.hidden = true; drv.querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x === c)); agg(); };
+  d.conducenti.forEach(n => { const c = bottone('chip', n, () => scegli(c, n)); drv.append(c); });
+  const cAltro = bottone('chip', 'Altro conducente', () => { chi = ''; fuori = true; altro.hidden = false; altro.focus(); drv.querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x === cAltro)); agg(); });
+  drv.append(cAltro); altro.oninput = agg;
+  apriSheet(el('div', 'sheet-tit', d.n), dato('Riferimento', d.rif), el('div', 'sheet-sez', 'Rimorchio'), ...(chips.children.length ? [chips] : []), inp, sug, nota,
+    el('div', 'sheet-sez', 'Chi si presenta?'), drv, altro, ok, bottone('cta-sec', 'Annulla', chiudiSheet));
+  agg();
 }
 function apriDiverso(att) {
   const ban = el('div', 'banner arancio', '⚠ Conducente diverso'); ban.append(el('small', '', 'Atteso: ' + att.chi + ' · rif. ' + att.rif));
