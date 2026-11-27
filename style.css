@@ -55,7 +55,6 @@ main { padding: 24px 14px 40px; }
 .inp-targa::placeholder { color: #b6bec6; }
 .inp-targa:focus, .inp:focus { outline: 3px solid var(--acc); outline-offset: 2px; }
 .btn-q { width: 62px; flex: none; display: grid; place-items: center; border-radius: 12px; font: 700 28px var(--mono); }
-.btn-q.jolly { background: #fff; border: 3px solid var(--ink); }
 .btn-q.cam { background: var(--giallo); color: var(--ink); }
 .btn-q.cam .ic { width: 30px; height: 30px; }
 .inp { width: 100%; height: 54px; margin-top: 10px; padding: 0 14px; background: #fff; color: var(--ink); border: 2px solid var(--line); border-radius: 12px; font-size: 18px; }

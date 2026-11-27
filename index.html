@@ -61,7 +61,6 @@
     <input id="in-aut" class="inp" placeholder="Cerca conducente (cognome)" autocomplete="off">
     <div class="campo-targa sotto">
       <div class="targa-box"><input id="in-tra" class="inp-targa" placeholder="FG456HJ" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false"></div>
-      <button class="btn-q jolly" data-jolly="in-tra" aria-label="Lettera illeggibile">?</button>
       <button class="btn-q cam" data-scan="in-tra" aria-label="Leggi la targa con la fotocamera"><svg class="ic"><use href="#i-cam"/></svg></button>
     </div>
     <div id="sugg-tra" class="sugg"></div>
@@ -69,10 +68,9 @@
     <div class="passo"><span class="n">2</span>Rimorchio</div>
     <div class="campo-targa">
       <div class="targa-box"><input id="in-rim" class="inp-targa" placeholder="XB123CD" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false"></div>
-      <button class="btn-q jolly" data-jolly="in-rim" aria-label="Lettera illeggibile">?</button>
       <button class="btn-q cam" data-scan="in-rim" aria-label="Leggi la targa con la fotocamera"><svg class="ic"><use href="#i-cam"/></svg></button>
     </div>
-    <p class="aiuto">Targa rovinata? Scrivi solo le ultime cifre, oppure tocca <b>?</b> per una lettera illeggibile.</p>
+    <p class="aiuto">Targa rovinata? Scrivi solo le ultime cifre.</p>
     <div id="stato-rim" class="stato" hidden></div>
     <div id="sugg-rim" class="sugg"></div>
 
@@ -83,13 +81,12 @@
       <div id="scheda-corpo" hidden>
     <div class="foto2">
       <div class="foto-slots">
-        <button class="foto-slot" id="fs-l"><svg class="ic"><use href="#i-cam"/></svg><strong>Scatta foto</strong><small>Da lontano · tutto il lato</small></button>
-        <button class="foto-slot" id="fs-v"><svg class="ic"><use href="#i-cam"/></svg><strong>Scatta foto</strong><small>Da vicino · il punto</small></button>
+        <button class="foto-slot" id="fs-l"><svg class="ic"><use href="#i-cam"/></svg><strong>Foto lontano</strong></button>
+        <button class="foto-slot" id="fs-v"><svg class="ic"><use href="#i-cam"/></svg><strong>Foto vicino</strong></button>
       </div>
       <input type="file" id="file-l" accept="image/*" capture="environment" hidden>
       <input type="file" id="file-v" accept="image/*" capture="environment" hidden>
       <div id="foto-esito"></div>
-      <p class="aiuto">Fai due foto: una da lontano e una da vicino. L'app riconosce la parte del camion e il tipo di problema; le foto restano nella scheda.</p>
     </div>
     <div class="scelta">
       <button id="dn-no" class="sc no">Nessun danno</button>
@@ -114,10 +111,9 @@
   <section id="v-uscita" class="vista" hidden>
     <div class="campo-targa">
       <div class="targa-box"><input id="ex-cerca" class="inp-targa" placeholder="CERCA" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false"></div>
-      <button class="btn-q jolly" data-jolly="ex-cerca" aria-label="Lettera illeggibile">?</button>
       <button class="btn-q cam" data-scan="ex-cerca" aria-label="Leggi la targa con la fotocamera"><svg class="ic"><use href="#i-cam"/></svg></button>
     </div>
-    <p class="aiuto">Bastano le ultime cifre. Se una lettera non si legge, tocca <b>?</b> al suo posto. Oppure tocca direttamente la riga.</p>
+    <p class="aiuto">Bastano le ultime cifre. Oppure tocca direttamente la riga.</p>
     <div id="ex-esito"></div>
     <div class="titolo-sez"><span>Uscite attese oggi</span><span id="ex-cont"></span></div>
     <div id="attese"></div>
@@ -129,10 +125,8 @@
     <div class="prog"><div id="gi-barra"></div></div>
     <div class="campo-targa sotto">
       <div class="targa-box"><input id="gi-cerca" class="inp-targa" placeholder="CERCA" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false"></div>
-      <button class="btn-q jolly" data-jolly="gi-cerca" aria-label="Lettera illeggibile">?</button>
       <button class="btn-q cam" data-scan="gi-cerca" aria-label="Leggi la targa con la fotocamera"><svg class="ic"><use href="#i-cam"/></svg></button>
     </div>
-    <p class="aiuto">Scrivi le ultime cifre; se una lettera non si legge tocca <b>?</b> al suo posto.</p>
     <div id="gi-azione"></div>
     <div id="giro-lista"></div>
     <div id="giro-intrusi"></div>
@@ -142,7 +136,6 @@
   <section id="v-rimorchi" class="vista" hidden>
     <div class="campo-targa sotto">
       <div class="targa-box"><input id="rm-cerca" class="inp-targa" placeholder="CERCA" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false"></div>
-      <button class="btn-q jolly" data-jolly="rm-cerca" aria-label="Lettera illeggibile">?</button>
       <button class="btn-q cam" data-scan="rm-cerca" aria-label="Leggi la targa con la fotocamera"><svg class="ic"><use href="#i-cam"/></svg></button>
     </div>
     <div class="titolo-sez"><span>Nel piazzale</span><span id="rm-cont"></span></div>

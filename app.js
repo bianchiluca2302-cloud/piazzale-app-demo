@@ -220,11 +220,11 @@ const RIL_DEMO = [
 ];
 let ril = null;
 function disegnaSlot() {
-  [['l', 'fs-l', 'Da lontano · tutto il lato'], ['v', 'fs-v', 'Da vicino · il punto']].forEach(([w, id, txt]) => {
+  [['l', 'fs-l', 'Foto lontano'], ['v', 'fs-v', 'Foto vicino']].forEach(([w, id, nome]) => {
     const b = $(id), u = foto[w];
     b.className = 'foto-slot' + (u ? ' piena' : '');
     b.style.backgroundImage = u ? 'url(' + u + ')' : '';
-    b.replaceChildren(...(u ? [el('small', 'fs-et', (w === 'l' ? 'Da lontano' : 'Da vicino') + ' · tocca per rifare')] : [ico('cam'), el('strong', '', 'Scatta foto'), el('small', '', txt)]));
+    b.replaceChildren(...(u ? [el('small', 'fs-et', nome)] : [ico('cam'), el('strong', '', nome)]));
   });
 }
 const impronta = u => { let h = 0; for (let i = 0; i < u.length; i += 97) h = (h * 31 + u.charCodeAt(i)) >>> 0; return h; };
@@ -487,7 +487,7 @@ function apriRimorchio(rim) {
   else Object.entries(r.i.danni).forEach(([k, v]) => nodi.push(dato(k + ' · ' + (NOMI[k] || 'zona'), v || 'tipo da indicare')));
   if (r.i && r.i.foto && (r.i.foto.l || r.i.foto.v)) {
     const g = el('div', 'foto-det');
-    [['l', 'Da lontano'], ['v', 'Da vicino']].forEach(([w, n]) => { if (r.i.foto[w]) { const f = el('figure'), im = el('img'); im.src = r.i.foto[w]; im.alt = 'Foto ' + n.toLowerCase(); f.append(im, el('figcaption', '', n)); g.append(f); } });
+    [['l', 'Foto lontano'], ['v', 'Foto vicino']].forEach(([w, n]) => { if (r.i.foto[w]) { const f = el('figure'), im = el('img'); im.src = r.i.foto[w]; im.alt = n; f.append(im, el('figcaption', '', n)); g.append(f); } });
     nodi.push(g);
   }
   nodi.push(el('div', 'sheet-sez', 'Giro piazzale'), dato('Controllo targa', r.giro ? 'Fatto' : 'Da fare'), bottone('cta-sec', 'Chiudi', chiudiSheet));
@@ -535,12 +535,6 @@ $('btn-reset').onclick = () => {
   localStorage.removeItem(KEY); location.replace(location.pathname);
 };
 
-// ---------- Tasti "?" ----------
-document.querySelectorAll('[data-jolly]').forEach(b => b.onclick = () => {
-  const i = $(b.dataset.jolly), p = i.selectionStart == null ? i.value.length : i.selectionStart;
-  i.setRangeText('?', p, i.selectionEnd == null ? p : i.selectionEnd, 'end');
-  i.dispatchEvent(new Event('input')); i.focus();
-});
 
 // ---------- Lettura targa con la fotocamera ----------
 // Raffica di scatti, si tiene il piu' nitido, contrasto esteso, poi OCR (Tesseract.js, serve rete la prima volta).
