@@ -74,7 +74,7 @@ function chiudiSheet() { $('sheet').hidden = true; }
 $('sheet').querySelector('.sheet-bg').onclick = chiudiSheet;
 
 // ---------- Navigazione ----------
-const TITOLI = { home: 'Piazzale', ingresso: 'Ingresso', uscita: 'Uscita', giro: 'Giro piazzale', invio: 'Chiudi giornata' };
+const TITOLI = { home: 'Piazzale', ingresso: 'Ingresso', uscita: 'Uscita', giro: 'Giro piazzale', invio: 'Chiudi giornata', rimorchi: 'Rimorchi in piazzale' };
 let vista = 'home';
 function vai(v, push = true) {
   chiudiSheet(); vista = v;
@@ -84,7 +84,7 @@ function vai(v, push = true) {
   $('logo').hidden = v !== 'home';
   document.body.dataset.vista = v;
   if (push && v !== 'home') history.pushState({ v }, '');
-  ({ home: aggiornaStat, ingresso: iniziaIngresso, uscita: disegnaUscita, giro: disegnaGiro, invio: disegnaInvio })[v]();
+  ({ home: aggiornaStat, ingresso: iniziaIngresso, uscita: disegnaUscita, giro: disegnaGiro, invio: disegnaInvio, rimorchi: disegnaRimorchi })[v]();
   window.scrollTo(0, 0);
 }
 const tornaHome = () => vista === 'home' ? vai('home', false) : history.back();
@@ -104,7 +104,7 @@ function aggiornaStat() {
   $('st-piazzale').textContent = S.piazzale.length;
   $('st-attese').textContent = mancano;
   $('st-oggi').textContent = [...S.ingressi, ...S.uscite].filter(r => oggi(r.ora)).length;
-  $('bd-uscita').textContent = mancano; $('bd-giro').textContent = dafare;
+  $('bd-rim').textContent = S.piazzale.length; $('bd-uscita').textContent = mancano; $('bd-giro').textContent = dafare;
   $('contatore').textContent = S.piazzale.length + ' in piazzale';
 }
 
@@ -424,6 +424,63 @@ $('gi-cerca').onkeydown = e => {
   if (r.length === 1 && !S.giro.includes(r[0].it.p)) spuntaGiro(r[0].it.p);
 };
 
+// ---------- Rimorchi in piazzale ----------
+// Dettaglio di ogni rimorchio. Per i cinque demo l'ingresso e' inventato; per gli altri viene dalla registrazione.
+const ORA = h => { const d = new Date(), [a, b] = h.split(':'); d.setHours(+a, +b, 0, 0); return d.toISOString(); };
+const INGRESSI_DEMO = {
+  XB123CD: { aut: 'Rossi Marco', tra: 'FG456HJ', ora: ORA('07:40'), danni: {} },
+  XC777EF: { aut: 'Esposito Ciro', tra: 'FH902MN', ora: ORA('08:15'), danni: { 15: 'Graffio' } },
+  XD555GH: { aut: 'Conti Andrea', tra: 'EZ118PQ', ora: ORA('06:55'), danni: {} },
+  XE010IJ: { aut: 'Greco Paolo', tra: 'FJ330RT', ora: ORA('08:50'), danni: { 21: 'Ammaccatura', 3: 'Rottura' } },
+  XF020KL: { aut: 'Ferrari Davide', tra: 'GA221KL', ora: ORA('05:30'), danni: {} }
+};
+const hh = ts => new Date(ts).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+function schedaRim(rim) {
+  const i = [...S.ingressi].reverse().find(x => x.rim === rim) || INGRESSI_DEMO[rim] || null;
+  const att = ATTESE.find(a => a.rim === rim && !uscito(rim)) || null;
+  return { i, att, nd: i ? Object.keys(i.danni).length : 0, giro: S.giro.includes(rim) };
+}
+function disegnaRimorchi() { $('rm-cerca').value = ''; filtraRimorchi(); }
+function filtraRimorchi() {
+  const q = $('rm-cerca').value, lista = $('rm-lista'); lista.replaceChildren();
+  let tutte = S.piazzale.map(p => ({ p: p.rim })), righe = tutte.map(it => ({ it, s: 0 }));
+  if (normJolly(q).length >= 2) righe = trova(q, tutte);
+  $('rm-cont').textContent = S.piazzale.length + ' in piazzale';
+  if (!righe.length) lista.append(el('p', 'nota', 'Nessun rimorchio trovato'));
+  righe.forEach(({ it }) => {
+    const r = schedaRim(it.p), b = el('button', 'card att'), d = el('div', 'dett'), st = el('div', 'rm-stati');
+    d.append(el('b', '', r.i ? r.i.aut : 'Ingresso non registrato'), el('small', '', r.att ? 'Lo ritira ' + r.att.chi : 'Nessun ritiro previsto'));
+    st.append(el('span', 'pill-s ' + (r.att ? 'avv' : 'ok'), r.att ? 'Ritiro previsto' : 'Disponibile'),
+      el('span', 'pill-s ' + (r.nd ? 'ko' : ''), r.nd ? r.nd + (r.nd === 1 ? ' danno' : ' danni') : 'Nessun danno'));
+    d.append(st); b.append(targaEl(it.p), d, ico('next'));
+    b.onclick = () => apriRimorchio(it.p);
+    lista.append(b);
+  });
+}
+function apriRimorchio(rim) {
+  const r = schedaRim(rim), nodi = [el('div', 'sheet-tit', 'Dettaglio rimorchio'), targaEl(rim, 'grande'), el('div', 'sheet-sez', 'Ingresso')];
+  if (r.i) nodi.push(dato('Entrato alle', hh(r.i.ora)), dato('Conducente', r.i.aut || '—'), dato('Trattore', r.i.tra || '—'));
+  else nodi.push(dato('Entrato', 'non registrato'));
+  nodi.push(el('div', 'sheet-sez', 'Ritiro'), dato('Disponibile', r.att ? 'No, ritiro previsto' : 'Sì, nessun ritiro assegnato'));
+  if (r.att) nodi.push(dato('Lo ritira', r.att.chi), dato('Riferimento', r.att.rif));
+  nodi.push(el('div', 'sheet-sez', 'Danni'));
+  if (!r.nd) nodi.push(dato('Danni', r.i ? 'Nessuno segnalato' : 'non noti'));
+  else Object.entries(r.i.danni).forEach(([k, v]) => nodi.push(dato(k + ' · ' + (NOMI[k] || 'zona'), v || 'tipo da indicare')));
+  if (r.i && r.i.nfoto) nodi.push(dato('Foto allegate', r.i.nfoto));
+  nodi.push(el('div', 'sheet-sez', 'Giro piazzale'), dato('Controllo targa', r.giro ? 'Fatto' : 'Da fare'), bottone('cta-sec', 'Chiudi', chiudiSheet));
+  apriSheet(...nodi);
+}
+$('rm-cerca').oninput = filtraRimorchi;
+// Chiudi giornata con la conferma in basso: riepilogo e tasto di conferma stanno nel foglio che sale dal fondo
+$('btn-chiudi-gg').onclick = () => {
+  const mancano = S.piazzale.filter(p => !S.giro.includes(p.rim)).length, att = ATTESE.filter(a => !uscito(a.rim)).length;
+  const nodi = [el('div', 'sheet-tit', 'Chiudere la giornata?'), dato('Rimorchi in piazzale', S.piazzale.length), dato('Ingressi', S.ingressi.length), dato('Uscite', S.uscite.length)];
+  if (mancano) nodi.push(el('div', 'banner arancio', '⚠ ' + mancano + (mancano === 1 ? ' targa non controllata' : ' targhe non controllate')));
+  if (att) nodi.push(el('div', 'banner arancio', '⚠ ' + att + (att === 1 ? ' uscita attesa non fatta' : ' uscite attese non fatte')));
+  nodi.push(bottone('cta verde', 'Conferma e chiudi giornata', () => { chiudiSheet(); inviaReport(); toast('Giornata chiusa, report scaricato', 'ok'); }, 'check'), bottone('cta-sec', 'Annulla', chiudiSheet));
+  apriSheet(...nodi);
+};
+
 // ---------- Chiudi giornata ----------
 function disegnaInvio() {
   const fatti = S.piazzale.filter(p => S.giro.includes(p.rim)).length;
@@ -437,7 +494,7 @@ function disegnaInvio() {
   $('esito-invio').textContent = '';
   $('btn-reset').textContent = 'Azzera i dati demo';
 }
-$('btn-invia').onclick = () => {
+function inviaReport() {
   const righe = ['tipo;targa_rimorchio;targa_trattore;persona;danni;nota;ora']
     .concat(S.ingressi.map(i => ['INGRESSO', i.rim, i.tra, i.aut, Object.entries(i.danni).map(([k, v]) => k + ':' + v).join('|'), i.nfoto + ' foto', i.ora].join(';')))
     .concat(S.uscite.map(u => ['USCITA', u.rim, '', u.chi, '', u.flag, u.ora].join(';')))
@@ -445,7 +502,8 @@ $('btn-invia').onclick = () => {
   const a = el('a'); a.href = URL.createObjectURL(new Blob(['﻿' + righe.join('\n')], { type: 'text/csv' }));
   a.download = 'report_' + new Date().toISOString().slice(0, 10) + '.csv'; a.click();
   $('esito-invio').textContent = 'Nel prodotto vero questo parte da solo verso il sistema del cliente. Qui scarica un CSV.';
-};
+}
+$('btn-invia').onclick = inviaReport;
 $('btn-reset').onclick = () => {
   if ($('btn-reset').textContent === 'Azzera i dati demo') {
     $('btn-reset').textContent = 'Tocca ancora per confermare';

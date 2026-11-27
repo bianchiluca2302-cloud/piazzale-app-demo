@@ -37,6 +37,8 @@ main { padding: 24px 14px 40px; }
 .tile strong { font-size: 21px; }
 .tile small { font-size: 14px; opacity: .92; }
 .t-in { background: var(--verde); } .t-out { background: var(--arancio); } .t-giro { background: var(--blu); } .t-end { background: var(--navy); }
+.t-rim { grid-column: 1 / -1; min-height: 110px; background: #3b4a58; } .t-rim strong, .t-rim small { padding-left: 52px; }
+.t-rim .ic { top: auto; bottom: 16px; }
 .bd-t { position: absolute; top: 12px; right: 12px; min-width: 32px; height: 32px; padding: 0 9px; display: grid; place-items: center; background: #fff; color: var(--ink); border-radius: 16px; font: 700 17px var(--mono); }
 .nota { color: var(--muted); font-size: 13px; text-align: center; margin: 18px 0 0; }
 
@@ -200,3 +202,13 @@ main { padding: 24px 14px 40px; }
 #btn-scatta { position: absolute; left: 14px; right: 14px; bottom: max(18px, env(safe-area-inset-bottom)); width: auto; margin: 0; background: var(--giallo); color: var(--ink); }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* Rimorchi in piazzale */
+body[data-vista=rimorchi] { --acc: var(--navy); --acc-ink: #fff; }
+.con-barra { padding-bottom: 96px; }
+.barra-fondo { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9; padding: 10px 14px; padding-bottom: max(10px, env(safe-area-inset-bottom)); background: var(--bg); border-top: 2px solid var(--line); }
+.barra-fondo .cta { margin-top: 0; }
+.rm-stati { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.pill-s { padding: 2px 9px; border-radius: 99px; font-size: 12px; font-weight: 700; background: #dde3e8; color: #2f3d49; }
+.pill-s.ok { background: var(--verde); color: #fff; } .pill-s.avv { background: #ffe9b8; color: #6b4200; } .pill-s.ko { background: var(--rosso); color: #fff; }
+.sheet-sez { margin: 14px 0 2px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
