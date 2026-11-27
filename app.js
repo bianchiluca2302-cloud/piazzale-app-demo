@@ -41,6 +41,14 @@ const ATTESE = [
   { rim: 'XD555GH', chi: 'Conti Andrea', rif: 'BL-4475' },
   { rim: 'XE010IJ', chi: 'Greco Paolo', rif: 'BL-4480' }
 ];
+// Arrivi dal porto: nel prodotto verrebbero dall'agenzia marittima o dal terminal (fonte da definire)
+const NAVI = [
+  { nave: 'Nave demo Livorno 1', eta: '09:30', rim: 'XQ100AA', chi: 'Rossi Marco' },
+  { nave: 'Nave demo Livorno 1', eta: '09:30', rim: 'XQ101BB', chi: 'Greco Paolo' },
+  { nave: 'Nave demo Livorno 1', eta: '09:30', rim: 'XQ102CC', chi: '' },
+  { nave: 'Nave demo Livorno 2', eta: '15:00', rim: 'XR200DD', chi: 'Conti Andrea' },
+  { nave: 'Nave demo Livorno 2', eta: '15:00', rim: 'XR201EE', chi: '' }
+];
 const DEMO_PIAZZALE = ['XB123CD', 'XC777EF', 'XD555GH', 'XE010IJ', 'XF020KL'];
 const RIM_NOTI = ['XA481BN', 'XG302MP', 'XH915QR', 'XL660ST', 'XM142UV', 'XN873WZ', 'XP207AB', ...DEMO_PIAZZALE];
 
@@ -120,7 +128,26 @@ function iniziaIngresso() {
   $('dn-no').classList.remove('on'); $('dn-si').classList.remove('on'); $('blocco-danni').hidden = true;
   document.querySelectorAll('.zona').forEach(z => z.classList.remove('danno'));
   $('foto-prev').replaceChildren(); impostaScheda(false); mostraVista(VISTE[0].id);
-  disegnaDanni(); frequenti(); aggiornaRim(); aggiornaTra(); aggiornaCta();
+  disegnaDanni(); frequenti(); aggiornaRim(); aggiornaTra(); aggiornaCta(); disegnaNavi();
+}
+const arrivato = rim => S.ingressi.some(i => i.rim === rim);
+function disegnaNavi() {
+  const box = $('navi'); box.replaceChildren();
+  $('nv-cont').textContent = NAVI.filter(n => !arrivato(n.rim)).length + ' da registrare';
+  let ultima = '';
+  NAVI.forEach(n => {
+    if (n.nave + n.eta !== ultima) { ultima = n.nave + n.eta; box.append(el('div', 'aiuto', n.nave + ' · arrivo ' + n.eta)); }
+    const fatto = arrivato(n.rim), b = el('button', 'card att' + (fatto ? ' fatta' : '')), d = el('div', 'dett');
+    d.append(el('b', '', n.chi || 'Conducente da indicare'), el('small', '', 'Dal porto · ' + n.nave));
+    b.append(targaEl(n.rim), d, fatto ? el('span', 'tag', 'Arrivato') : ico('next'));
+    b.onclick = () => {
+      if (fatto) return;
+      $('in-rim').value = n.rim; $('in-aut').value = n.chi || '';
+      const a = AUTISTI.find(x => x.n === n.chi); $('in-tra').value = a ? a.tra : '';
+      frequenti(); aggiornaRim(); aggiornaTra(); aggiornaCta(); window.scrollTo({ top: $('in-aut').offsetTop - 60, behavior: 'smooth' });
+    };
+    box.append(b);
+  });
 }
 const mk = (tag, attrs, cls) => {
   const e = document.createElementNS(SVGNS, tag);
