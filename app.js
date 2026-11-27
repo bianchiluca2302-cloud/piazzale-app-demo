@@ -138,7 +138,7 @@ function disegnaNavi() {
   NAVI.forEach(n => {
     if (n.nave + n.eta !== ultima) { ultima = n.nave + n.eta; box.append(el('div', 'aiuto', n.nave + ' · arrivo ' + n.eta)); }
     const fatto = arrivato(n.rim), b = el('button', 'card att' + (fatto ? ' fatta' : '')), d = el('div', 'dett');
-    d.append(el('b', '', n.chi || 'Conducente da indicare'), el('small', '', 'Dal porto · ' + n.nave));
+    d.append(el('b', '', n.chi || 'Conducente da indicare'));
     b.append(targaEl(n.rim), d, fatto ? el('span', 'tag', 'Arrivato') : ico('next'));
     b.onclick = () => {
       if (fatto) return;
