@@ -53,6 +53,7 @@ const DEMO_PIAZZALE = ['XB123CD', 'XC777EF', 'XD555GH', 'XE010IJ', 'XF020KL'];
 const RIM_NOTI = ['XA481BN', 'XG302MP', 'XH915QR', 'XL660ST', 'XM142UV', 'XN873WZ', 'XP207AB', ...DEMO_PIAZZALE];
 
 const KEY = 'piazzale-v2';
+let sede = localStorage.getItem('piazzale-sede') || 'LDV'; // piazzale su cui si lavora: per ora solo un'etichetta, i dati demo sono gli stessi
 let S = JSON.parse(localStorage.getItem(KEY) || 'null') || {
   piazzale: DEMO_PIAZZALE.map(rim => ({ rim })), ingressi: [], uscite: [], giro: [], intrusi: []
 };
@@ -74,17 +75,18 @@ function chiudiSheet() { $('sheet').hidden = true; }
 $('sheet').querySelector('.sheet-bg').onclick = chiudiSheet;
 
 // ---------- Navigazione ----------
-const TITOLI = { home: 'Piazzale', ingresso: 'Ingresso', uscita: 'Uscita', giro: 'Giro piazzale', invio: 'Chiudi giornata', rimorchi: 'Rimorchi in piazzale' };
+const TITOLI = { piazzale: 'Scegli il piazzale', home: 'Piazzale', ingresso: 'Ingresso', uscita: 'Uscita', giro: 'Giro piazzale', invio: 'Chiudi giornata', rimorchi: 'Rimorchi in piazzale' };
 let vista = 'home';
 function vai(v, push = true) {
   chiudiSheet(); vista = v;
   document.querySelectorAll('.vista').forEach(e => e.hidden = e.id !== 'v-' + v);
   $('titolo').textContent = TITOLI[v];
-  $('btn-indietro').hidden = v === 'home';
-  $('logo').hidden = v !== 'home';
+  $('btn-indietro').hidden = v === 'home' || v === 'piazzale';
+  $('logo').hidden = v !== 'home' && v !== 'piazzale';
+  $('contatore').hidden = v === 'piazzale';
   document.body.dataset.vista = v;
   if (push && v !== 'home') history.pushState({ v }, '');
-  ({ home: aggiornaStat, ingresso: iniziaIngresso, uscita: disegnaUscita, giro: disegnaGiro, invio: disegnaInvio, rimorchi: disegnaRimorchi })[v]();
+  ({ piazzale() {}, home: aggiornaStat, ingresso: iniziaIngresso, uscita: disegnaUscita, giro: disegnaGiro, invio: disegnaInvio, rimorchi: disegnaRimorchi })[v]();
   window.scrollTo(0, 0);
 }
 const tornaHome = () => vista === 'home' ? vai('home', false) : history.back();
@@ -105,7 +107,7 @@ function aggiornaStat() {
   $('st-attese').textContent = mancano;
   $('st-oggi').textContent = [...S.ingressi, ...S.uscite].filter(r => oggi(r.ora)).length;
   $('bd-rim').textContent = S.piazzale.length; $('bd-uscita').textContent = mancano; $('bd-giro').textContent = dafare;
-  $('contatore').textContent = S.piazzale.length + ' in piazzale';
+  $('contatore').textContent = S.piazzale.length + ' in piazzale'; $('sede-nome').textContent = sede;
 }
 
 // ---------- Suggerimenti ----------
@@ -624,10 +626,15 @@ $('btn-scatta').onclick = async () => {
   }
 };
 
+// ---------- Piazzale su cui si lavora ----------
+document.querySelectorAll('[data-pz]').forEach(b => b.onclick = () => {
+  sede = b.dataset.pz; localStorage.setItem('piazzale-sede', sede); vai('home', false);
+});
+$('sede-btn').onclick = () => vai('piazzale');
+
 // ---------- Avvio ----------
 costruisciSagome();
 history.replaceState({ v: 'home' }, '');
 const iniz = location.hash.slice(1);
-vai('home', false);
-if (TITOLI[iniz] && iniz !== 'home') vai(iniz);
+if (TITOLI[iniz] && iniz !== 'home' && iniz !== 'piazzale') { vai('home', false); vai(iniz); } else vai('piazzale', false);
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});

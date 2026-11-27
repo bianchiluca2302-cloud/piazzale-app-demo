@@ -221,3 +221,11 @@ body[data-vista=rimorchi] { --acc: var(--navy); --acc-ink: #fff; }
 .pill-s { padding: 2px 9px; border-radius: 99px; font-size: 12px; font-weight: 700; background: #dde3e8; color: #2f3d49; }
 .pill-s.ok { background: var(--verde); color: #fff; } .pill-s.avv { background: #ffe9b8; color: #6b4200; } .pill-s.ko { background: var(--rosso); color: #fff; }
 .sheet-sez { margin: 14px 0 2px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+
+.scelte-pz { display: flex; flex-direction: column; gap: 14px; min-height: calc(100vh - 140px); }
+.pz { flex: 1; min-height: 120px; border-radius: 18px; background: var(--navy); color: #fff; font-size: 34px; font-weight: 800; box-shadow: 0 3px 0 rgba(0, 0, 0, .25); }
+.pz:nth-child(2) { background: var(--blu); } .pz:nth-child(3) { background: var(--verde); }
+.sede { display: flex; align-items: center; gap: 10px; width: 100%; margin-bottom: 12px; padding: 12px 14px; background: #fff; border: 3px solid var(--ink); border-radius: 14px; font-size: 16px; }
+.sede span { color: var(--muted); font-weight: 600; }
+.sede b { flex: 1; text-align: left; font-size: 24px; font-weight: 800; }
+.sede i { font-style: normal; font-weight: 700; color: var(--blu); }
