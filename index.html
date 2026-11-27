@@ -81,10 +81,15 @@
         <span class="n">3</span><span class="scheda-tit">Danni</span><span id="danni-stato" class="scheda-stato avv">Da indicare</span><svg class="ic chev"><use href="#i-next"/></svg>
       </button>
       <div id="scheda-corpo" hidden>
-    <div class="varco">
-      <button class="cta-sec" id="btn-varco">Simula passaggio dal varco</button>
-      <div id="varco-esito"></div>
-      <p class="aiuto">Prova: nel prodotto vero le telecamere del varco segnalano solo problemi evidenti (teli tagliati, parti mancanti). Le immagini qui sono disegnate.</p>
+    <div class="foto2">
+      <div class="foto-slots">
+        <button class="foto-slot" id="fs-l"><svg class="ic"><use href="#i-cam"/></svg><strong>Scatta foto</strong><small>Da lontano · tutto il lato</small></button>
+        <button class="foto-slot" id="fs-v"><svg class="ic"><use href="#i-cam"/></svg><strong>Scatta foto</strong><small>Da vicino · il punto</small></button>
+      </div>
+      <input type="file" id="file-l" accept="image/*" capture="environment" hidden>
+      <input type="file" id="file-v" accept="image/*" capture="environment" hidden>
+      <div id="foto-esito"></div>
+      <p class="aiuto">Fai due foto: una da lontano e una da vicino. L'app riconosce la parte del camion e il tipo di problema; le foto restano nella scheda.</p>
     </div>
     <div class="scelta">
       <button id="dn-no" class="sc no">Nessun danno</button>
@@ -97,9 +102,6 @@
         <p class="aiuto centro">Tocca la parte danneggiata. I numeri sono quelli dello schema.</p>
       </div>
       <div id="lista-danni"></div>
-      <button class="cta-sec" id="btn-foto"><svg class="ic"><use href="#i-cam"/></svg>Aggiungi foto dei danni</button>
-      <input type="file" id="file-foto" accept="image/*" capture="environment" hidden>
-      <div id="foto-prev" class="foto-prev"></div>
     </div>
       </div>
     </div>
@@ -115,7 +117,7 @@
       <button class="btn-q jolly" data-jolly="ex-cerca" aria-label="Lettera illeggibile">?</button>
       <button class="btn-q cam" data-scan="ex-cerca" aria-label="Leggi la targa con la fotocamera"><svg class="ic"><use href="#i-cam"/></svg></button>
     </div>
-    <p class="aiuto">Bastano le ultime cifre. Oppure tocca direttamente la riga.</p>
+    <p class="aiuto">Bastano le ultime cifre. Se una lettera non si legge, tocca <b>?</b> al suo posto. Oppure tocca direttamente la riga.</p>
     <div id="ex-esito"></div>
     <div class="titolo-sez"><span>Uscite attese oggi</span><span id="ex-cont"></span></div>
     <div id="attese"></div>
@@ -130,6 +132,7 @@
       <button class="btn-q jolly" data-jolly="gi-cerca" aria-label="Lettera illeggibile">?</button>
       <button class="btn-q cam" data-scan="gi-cerca" aria-label="Leggi la targa con la fotocamera"><svg class="ic"><use href="#i-cam"/></svg></button>
     </div>
+    <p class="aiuto">Scrivi le ultime cifre; se una lettera non si legge tocca <b>?</b> al suo posto.</p>
     <div id="gi-azione"></div>
     <div id="giro-lista"></div>
     <div id="giro-intrusi"></div>

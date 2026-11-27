@@ -56,7 +56,7 @@ const KEY = 'piazzale-v2';
 let S = JSON.parse(localStorage.getItem(KEY) || 'null') || {
   piazzale: DEMO_PIAZZALE.map(rim => ({ rim })), ingressi: [], uscite: [], giro: [], intrusi: []
 };
-const salva = () => { localStorage.setItem(KEY, JSON.stringify(S)); aggiornaStat(); };
+const salva = () => { let ok = true; try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) { ok = false; } aggiornaStat(); return ok; };
 
 const rimNoti = () => [...new Set([...RIM_NOTI, ...S.piazzale.map(p => p.rim), ...S.ingressi.map(i => i.rim)])].map(p => ({ p }));
 const traNoti = () => AUTISTI.map(a => ({ p: a.tra, a }));
@@ -121,13 +121,13 @@ function suggerisci(box, q, lista, scegli) {
 function stato(box, tipo, testo) { box.className = 'stato ' + tipo; box.textContent = testo; box.hidden = !testo; }
 
 // ---------- Ingresso ----------
-let danni = {}, foto = [], dannoScelta = null;
+let danni = {}, foto = { l: null, v: null }, dannoScelta = null;
 function iniziaIngresso() {
-  danni = {}; foto = []; dannoScelta = null;
+  danni = {}; foto = { l: null, v: null }; dannoScelta = null; ril = null;
   ['in-rim', 'in-tra', 'in-aut'].forEach(i => $(i).value = '');
   $('dn-no').classList.remove('on'); $('dn-si').classList.remove('on'); $('blocco-danni').hidden = true;
   document.querySelectorAll('.zona').forEach(z => z.classList.remove('danno'));
-  $('foto-prev').replaceChildren(); impostaScheda(false); mostraVista(VISTE[0].id);
+  disegnaSlot(); $('foto-esito').replaceChildren(); impostaScheda(false); mostraVista(VISTE[0].id);
   disegnaDanni(); frequenti(); aggiornaRim(); aggiornaTra(); aggiornaCta(); disegnaNavi();
 }
 const arrivato = rim => S.ingressi.some(i => i.rim === rim);
@@ -205,45 +205,70 @@ function scegliDanno(si) {
   dannoScelta = si ? 'si' : 'no';
   $('dn-no').classList.toggle('on', !si); $('dn-si').classList.toggle('on', si);
   $('blocco-danni').hidden = !si;
-  if (!si) { Object.keys(danni).forEach(k => { delete danni[k]; segnaZona(k); }); foto = []; $('foto-prev').replaceChildren(); disegnaDanni(); }
+  if (!si) { Object.keys(danni).forEach(k => { delete danni[k]; segnaZona(k); }); disegnaDanni(); }
   aggiornaCta();
 }
-// Controllo del varco (simulato): la macchina propone, l'operatore conferma. Solo problemi evidenti, niente ammaccature piccole.
-let varcoN = 0;
-function immagineVarco(taglio) {
-  const svg = mk('svg', { viewBox: '0 0 360 120', role: 'img', 'aria-label': taglio ? 'Fiancata con telo tagliato' : 'Fiancata senza problemi' }, 'varco-img');
-  [['rect', { x: 0, y: 0, width: 360, height: 120, fill: '#2b3640' }],
-   ['rect', { x: 14, y: 14, width: 332, height: 78, rx: 4, fill: '#6f8aa3' }],
-   ['line', { x1: 14, y1: 40, x2: 346, y2: 40, stroke: '#5b748b', 'stroke-width': 2 }],
-   ['line', { x1: 14, y1: 66, x2: 346, y2: 66, stroke: '#5b748b', 'stroke-width': 2 }],
-   ['circle', { cx: 70, cy: 100, r: 12, fill: '#111' }], ['circle', { cx: 110, cy: 100, r: 12, fill: '#111' }],
-   ['circle', { cx: 290, cy: 100, r: 12, fill: '#111' }]].forEach(([t, a]) => svg.append(mk(t, a)));
-  if (taglio) {
-    svg.append(mk('path', { d: 'M168 22L180 38L172 50L186 64L176 86', fill: 'none', stroke: '#1b1f24', 'stroke-width': 7, 'stroke-linejoin': 'round' }));
-    svg.append(mk('rect', { x: 146, y: 14, width: 62, height: 78, rx: 4, fill: 'none', stroke: '#ff3b30', 'stroke-width': 3, 'stroke-dasharray': '7 4' }));
-  }
-  return svg;
+// Foto del mezzo: una da lontano e una da vicino. Il riconoscimento di parte e tipo e' SIMULATO (nessun modello vero):
+// il risultato dipende dalla foto scattata, ma e' solo per mostrare l'idea. L'operatore conferma sempre.
+const RIL_DEMO = [
+  { k: '15', t: 'Rottura', x: .42, y: .30, nota: 'telo tagliato' },
+  { k: '12', t: 'Ammaccatura', x: .74, y: .38, nota: 'lamiera deformata' },
+  { k: '45', t: 'Graffio', x: .38, y: .45, nota: 'segni sulla fiancata' },
+  { k: '32', t: 'Rottura', x: .30, y: .42, nota: 'porta danneggiata' },
+  { k: '26', t: 'Mancante', x: .30, y: .76, nota: 'parafango mancante' },
+  null
+];
+let ril = null;
+function disegnaSlot() {
+  [['l', 'fs-l', 'Da lontano · tutto il lato'], ['v', 'fs-v', 'Da vicino · il punto']].forEach(([w, id, txt]) => {
+    const b = $(id), u = foto[w];
+    b.className = 'foto-slot' + (u ? ' piena' : '');
+    b.style.backgroundImage = u ? 'url(' + u + ')' : '';
+    b.replaceChildren(...(u ? [el('small', 'fs-et', (w === 'l' ? 'Da lontano' : 'Da vicino') + ' · tocca per rifare')] : [ico('cam'), el('strong', '', 'Scatta foto'), el('small', '', txt)]));
+  });
 }
-function mostraVarco() {
-  const taglio = varcoN++ % 2 === 0, box = $('varco-esito'); box.replaceChildren();
-  const c = el('div', 'varco-card ' + (taglio ? 'ko' : 'ok'));
-  c.append(immagineVarco(taglio), el('p', 'varco-tit', taglio ? 'Problema evidente: telo tagliato sul lato A' : 'Nessun problema evidente'));
-  const az = el('div', 'varco-az');
-  if (taglio) {
-    az.append(
-      bottone('varco-b ko', 'Confermo il danno', () => {
-        const k = 15; // provvisorio: zona centrale del lato A, il codice del telo non e' sul foglio
-        scegliDanno(true); if (!(k in danni)) toccaZona(k);
-        danni[k] = 'Rottura'; disegnaDanni(); aggiornaCta();
-        box.replaceChildren(el('p', 'varco-fatto', 'Danno confermato: telo tagliato (zona ' + k + ', tipo Rottura)'));
-      }),
-      bottone('varco-b', 'Falso allarme', () => { scegliDanno(false); box.replaceChildren(el('p', 'varco-fatto', 'Falso allarme: nessun danno')); }));
+const impronta = u => { let h = 0; for (let i = 0; i < u.length; i += 97) h = (h * 31 + u.charCodeAt(i)) >>> 0; return h; };
+function analizza() {
+  const box = $('foto-esito'); box.replaceChildren();
+  if (!foto.l || !foto.v) { ril = null; return; }
+  box.append(el('p', 'foto-att', 'Riconoscimento in corso…'));
+  const tok = foto.l + foto.v.length;
+  setTimeout(() => {
+    if (foto.l + foto.v.length !== tok) return;
+    const r = RIL_DEMO[(impronta(foto.l) + impronta(foto.v)) % RIL_DEMO.length];
+    ril = r; mostraEsito(r);
+  }, 900);
+}
+const azioni = (...bt) => { const d = el('div', 'varco-az'); d.append(...bt); return d; };
+function mostraEsito(r) {
+  const box = $('foto-esito'); box.replaceChildren();
+  const c = el('div', 'varco-card ' + (r ? 'ko' : 'ok')), im = el('div', 'foto-ril');
+  im.style.backgroundImage = 'url(' + foto.l + ')';
+  if (r) { const q = el('span', 'ril-box'); q.style.left = (r.x * 100 - 14) + '%'; q.style.top = (r.y * 100 - 14) + '%'; im.append(q); }
+  c.append(im);
+  if (!r) {
+    c.append(el('p', 'varco-tit', 'Nessun problema riconosciuto'),
+      azioni(bottone('varco-b ok', 'Confermo: nessun danno', () => { scegliDanno(false); box.replaceChildren(el('p', 'varco-fatto', 'Confermato: nessun danno')); })));
   } else {
-    az.append(bottone('varco-b ok', 'Confermo: nessun danno', () => { scegliDanno(false); box.replaceChildren(el('p', 'varco-fatto', 'Confermato: nessun danno')); }));
+    c.append(el('p', 'varco-tit', 'Riconosciuto: ' + r.t + ' · ' + NOMI[r.k]), el('p', 'varco-sub', 'Zona ' + r.k + ' · ' + r.nota + ' (riconoscimento simulato)'),
+      azioni(
+        bottone('varco-b ko', 'Confermo', () => {
+          scegliDanno(true); if (!(r.k in danni)) toccaZona(r.k);
+          danni[r.k] = r.t; disegnaDanni(); aggiornaCta();
+          const v = VISTE.find(x => x.zone.some(z => z.p === r.k)); if (v) mostraVista(v.id);
+          box.replaceChildren(el('p', 'varco-fatto', 'Danno segnato: ' + r.t + ' · zona ' + r.k + '. Puoi correggerlo sulla sagoma qui sotto.'));
+        }),
+        bottone('varco-b', 'Non è un danno', () => { scegliDanno(false); box.replaceChildren(el('p', 'varco-fatto', 'Nessun danno')); })));
   }
-  c.append(az); box.append(c);
+  box.append(c);
 }
-$('btn-varco').onclick = mostraVarco;
+[['l', 'fs-l', 'file-l'], ['v', 'fs-v', 'file-v']].forEach(([w, bt, fi]) => {
+  $(bt).onclick = () => $(fi).click();
+  $(fi).onchange = async e => {
+    const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+    try { foto[w] = await riduci(f); disegnaSlot(); analizza(); } catch (err) { toast('Foto non letta, riprova', 'ko'); }
+  };
+});
 $('dn-no').onclick = () => scegliDanno(false);
 $('dn-si').onclick = () => scegliDanno(true);
 
@@ -310,19 +335,13 @@ async function riduci(file, max = 1280) {
   c.getContext('2d').drawImage(b, 0, 0, c.width, c.height);
   return c.toDataURL('image/jpeg', 0.7);
 }
-$('btn-foto').onclick = () => $('file-foto').click();
-$('file-foto').onchange = async e => {
-  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
-  try {
-    const url = await riduci(f); foto.push(url);
-    const im = el('img'); im.src = url; im.alt = 'Foto del danno'; $('foto-prev').append(im);
-  } catch (err) { toast('Foto non letta, riprova', 'ko'); }
-};
 $('btn-salva-ingresso').onclick = () => {
   const rim = norm($('in-rim').value);
-  S.ingressi.push({ rim, tra: norm($('in-tra').value), aut: $('in-aut').value.trim(), danni: { ...danni }, nfoto: foto.length, ora: new Date().toISOString() });
+  S.ingressi.push({ rim, tra: norm($('in-tra').value), aut: $('in-aut').value.trim(), danni: { ...danni }, foto: { ...foto }, nfoto: (foto.l ? 1 : 0) + (foto.v ? 1 : 0), ora: new Date().toISOString() });
   S.piazzale = S.piazzale.filter(p => p.rim !== rim).concat({ rim });
-  salva(); toast('Ingresso registrato: ' + rim, 'ok'); tornaHome();
+  if (!salva()) { S.ingressi[S.ingressi.length - 1].foto = null; salva(); toast('Memoria piena: foto non salvate', 'ko'); }
+  else toast('Ingresso registrato: ' + rim, 'ok');
+  tornaHome();
 };
 
 // ---------- Uscita ----------
@@ -466,7 +485,11 @@ function apriRimorchio(rim) {
   nodi.push(el('div', 'sheet-sez', 'Danni'));
   if (!r.nd) nodi.push(dato('Danni', r.i ? 'Nessuno segnalato' : 'non noti'));
   else Object.entries(r.i.danni).forEach(([k, v]) => nodi.push(dato(k + ' · ' + (NOMI[k] || 'zona'), v || 'tipo da indicare')));
-  if (r.i && r.i.nfoto) nodi.push(dato('Foto allegate', r.i.nfoto));
+  if (r.i && r.i.foto && (r.i.foto.l || r.i.foto.v)) {
+    const g = el('div', 'foto-det');
+    [['l', 'Da lontano'], ['v', 'Da vicino']].forEach(([w, n]) => { if (r.i.foto[w]) { const f = el('figure'), im = el('img'); im.src = r.i.foto[w]; im.alt = 'Foto ' + n.toLowerCase(); f.append(im, el('figcaption', '', n)); g.append(f); } });
+    nodi.push(g);
+  }
   nodi.push(el('div', 'sheet-sez', 'Giro piazzale'), dato('Controllo targa', r.giro ? 'Fatto' : 'Da fare'), bottone('cta-sec', 'Chiudi', chiudiSheet));
   apriSheet(...nodi);
 }
