@@ -72,7 +72,6 @@
       <input id="in-aut" class="inp" placeholder="Cerca conducente (cognome)" autocomplete="off">
       <div class="campo-targa sotto">
         <div class="targa-box"><input id="in-tra" class="inp-targa" placeholder="FG456HJ" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false"></div>
-        <button class="btn-q cam" data-scan="in-tra" aria-label="Leggi la targa con la fotocamera"><svg class="ic"><use href="#i-cam"/></svg></button>
       </div>
       <div id="sugg-tra" class="sugg"></div>
     </div>
@@ -81,15 +80,15 @@
       <div class="passo"><span class="n">2</span>Rimorchio</div>
       <div class="campo-targa">
         <div class="targa-box"><input id="in-rim" class="inp-targa" placeholder="XB123CD" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false"></div>
-        <button class="btn-q cam" data-scan="in-rim" aria-label="Leggi la targa con la fotocamera"><svg class="ic"><use href="#i-cam"/></svg></button>
+        <button class="btn-q cam" data-scan="in-rim" aria-label="Foto della targa del rimorchio"><svg class="ic"><use href="#i-cam"/></svg></button>
       </div>
-      <p class="aiuto">Targa rovinata? Scrivi solo le ultime cifre.</p>
       <div id="stato-rim" class="stato" hidden></div>
       <div id="sugg-rim" class="sugg"></div>
-      <button class="foto-slot foto-targa" id="fs-t"><svg class="ic"><use href="#i-cam"/></svg><strong>Foto targa rimorchio</strong></button>
+      <div id="foto-targa" class="foto-targa" hidden></div>
       <input type="file" id="file-t" accept="image/*" capture="environment" hidden>
       <div class="sotto-et">Ditta</div>
       <div id="ditta-in" class="chips"></div>
+      <input id="in-ditta" class="inp" placeholder="Scrivi o scegli la ditta" autocomplete="off">
     </div>
 
     <div class="scheda">

@@ -294,20 +294,22 @@ function frequenti() {
   });
 }
 function disegnaFotoTarga() {
-  const b = $('fs-t'), u = fotoTarga;
-  b.className = 'foto-slot foto-targa' + (u ? ' piena' : '');
-  b.style.backgroundImage = u ? 'url(' + u + ')' : '';
-  b.replaceChildren(...(u ? [el('small', 'fs-et', 'Foto targa rimorchio')] : [ico('cam'), el('strong', '', 'Foto targa rimorchio')]));
+  const b = $('foto-targa'); b.hidden = !fotoTarga; b.replaceChildren();
+  if (fotoTarga) { const im = el('img'); im.src = fotoTarga; im.alt = 'Foto targa rimorchio'; b.append(im, el('small', 'fs-et', 'Foto targa rimorchio ✓')); }
 }
-$('fs-t').onclick = () => $('file-t').click();
+// Se la fotocamera dell'app non parte, la foto della targa del rimorchio si fa con quella del telefono
 $('file-t').onchange = async e => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
   try { fotoTarga = await riduci(f, 1000); disegnaFotoTarga(); aggiornaCta(); } catch (err) { toast('Foto non letta, riprova', 'ko'); }
 };
+// come il conducente: tasti delle ditte note (filtrati da quello che si scrive) e campo libero per una ditta non in elenco
 function disegnaDittaIn() {
-  const box = $('ditta-in'); box.replaceChildren();
-  DITTE.forEach(d => box.append(bottone('chip' + (dittaIn === d.n ? ' on' : ''), d.n, () => { dittaIn = dittaIn === d.n ? '' : d.n; disegnaDittaIn(); })));
+  const box = $('ditta-in'), inp = $('in-ditta'); box.replaceChildren();
+  if (inp.value !== dittaIn) inp.value = dittaIn;
+  const q = dittaIn.trim().toLowerCase(), scelta = DITTE.some(d => d.n === dittaIn);
+  DITTE.filter(d => scelta || !q || d.n.toLowerCase().includes(q)).forEach(d => box.append(bottone('chip' + (dittaIn === d.n ? ' on' : ''), d.n, () => { dittaIn = dittaIn === d.n ? '' : d.n; disegnaDittaIn(); })));
 }
+$('in-ditta').oninput = () => { dittaIn = $('in-ditta').value; disegnaDittaIn(); };
 function aggiornaRim() {
   const q = $('in-rim').value, n = norm(q);
   const dl = DITTE.find(d => d.rim.includes(n)); // targa gia' nelle liste di una ditta: si propone quella
@@ -330,7 +332,7 @@ function aggiornaCta() {
   else if (haJolly(rim) || haJolly(tra)) manca = 'Sostituisci il ? con la lettera giusta';
   else if (norm(tra).length < 5) manca = 'Manca la targa del trattore';
   else if (norm(rim).length < 5) manca = 'Manca la targa del rimorchio';
-  else if (!fotoTarga) manca = 'Manca la foto della targa del rimorchio';
+  else if (!fotoTarga) manca = 'Manca la foto della targa: tocca la fotocamera gialla';
   else if (!dannoScelta) { manca = 'Indica se ci sono danni (tocca qui)'; neiDanni = true; }
   else if (dannoScelta === 'si' && !Object.keys(danni).length) { manca = 'Tocca sulla sagoma la parte danneggiata'; neiDanni = true; }
   else if (Object.values(danni).some(v => !v)) { manca = 'Scegli il tipo di ogni danno'; neiDanni = true; }
@@ -365,7 +367,7 @@ async function riduci(file, max = 1280) {
 }
 $('btn-salva-ingresso').onclick = () => {
   const rim = norm($('in-rim').value);
-  S.ingressi.push({ rim, tra: norm($('in-tra').value), aut: $('in-aut').value.trim(), danni: { ...danni }, ditta: dittaIn, fotoTarga, foto: { ...foto }, nfoto: (foto.l ? 1 : 0) + (foto.v ? 1 : 0), ora: new Date().toISOString() });
+  S.ingressi.push({ rim, tra: norm($('in-tra').value), aut: $('in-aut').value.trim(), danni: { ...danni }, ditta: dittaIn.trim(), fotoTarga, foto: { ...foto }, nfoto: (foto.l ? 1 : 0) + (foto.v ? 1 : 0), ora: new Date().toISOString() });
   S.piazzale = S.piazzale.filter(p => p.rim !== rim).concat({ rim });
   if (!salva()) { Object.assign(S.ingressi[S.ingressi.length - 1], { foto: null, fotoTarga: null }); salva(); toast('Memoria piena: foto non salvate', 'ko'); }
   else toast('Ingresso registrato: ' + rim, 'ok');
@@ -634,7 +636,10 @@ async function apriScan(campo) {
     const tr = stream.getVideoTracks()[0], cap = tr.getCapabilities ? tr.getCapabilities() : {};
     $('btn-torcia').hidden = !cap.torch;
     if (cap.focusMode && cap.focusMode.includes('continuous')) tr.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
-  } catch (e) { msgScan('Fotocamera non disponibile (serve HTTPS). Scrivi la targa o le ultime cifre.'); }
+  } catch (e) {
+    if (campo === 'in-rim') { chiudiScan(); $('file-t').click(); return; }
+    msgScan('Fotocamera non disponibile (serve HTTPS). Scrivi la targa o le ultime cifre.');
+  }
 }
 function chiudiScan() {
   if (stream) stream.getTracks().forEach(t => t.stop());
@@ -691,17 +696,21 @@ $('btn-scatta').onclick = async () => {
     const scatti = [];
     for (let i = 1; i <= 5; i++) { msgScan('Tieni fermo… ' + i + '/5'); const c = ritaglia(v); scatti.push({ c, nit: elabora(c) }); await attesa(120); }
     scatti.sort((a, b) => b.nit - a.nit);
+    if (campoScan === 'in-rim') { fotoTarga = scatti[0].c.toDataURL('image/jpeg', 0.85); disegnaFotoTarga(); } // la foto resta anche se la lettura non riesce
     msgScan('Leggo la targa…');
     const noti = tutteLeTarghe(); let best = null;
     for (const { c } of scatti.slice(0, 2)) {
       const t = await leggi(c), m = trova(t, noti)[0], punti = m ? m.s : 9;
       if (t.length >= 3 && (!best || punti < best.punti || (punti === best.punti && t.length > best.t.length))) best = { t, punti };
     }
-    if (!best) { msgScan('Non riesco a leggerla: avvicinati, accendi la torcia e riprova, oppure scrivi le ultime cifre.'); $('btn-scatta').disabled = false; return; }
-    if (campoScan === 'in-rim') { fotoTarga = scatti[0].c.toDataURL('image/jpeg', 0.8); disegnaFotoTarga(); }
+    if (!best) {
+      if (campoScan === 'in-rim') { chiudiScan(); toast('Foto salvata: scrivi la targa', 'ok'); aggiornaCta(); return; }
+      msgScan('Non riesco a leggerla: avvicinati, accendi la torcia e riprova, oppure scrivi le ultime cifre.'); $('btn-scatta').disabled = false; return;
+    }
     $(campoScan).value = best.t; $(campoScan).dispatchEvent(new Event('input'));
     chiudiScan();
   } catch (e) {
+    if (campoScan === 'in-rim' && fotoTarga) { chiudiScan(); toast('Foto salvata: scrivi la targa', 'ok'); aggiornaCta(); return; }
     msgScan('Lettura automatica non disponibile (serve rete la prima volta). Scrivi le ultime cifre.'); $('btn-scatta').disabled = false;
   }
 };
