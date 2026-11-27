@@ -66,30 +66,35 @@
     <div class="titolo-sez"><span>Arrivi dal porto</span><span id="nv-cont"></span></div>
     <div id="navi"></div>
     <p class="aiuto">Tocca un rimorchio atteso per compilare l'ingresso. Se non è in lista, scrivi la targa qui sotto.</p>
-    <div class="passo"><span class="n">1</span>Conducente e trattore</div>
-    <div id="freq" class="chips"></div>
-    <input id="in-aut" class="inp" placeholder="Cerca conducente (cognome)" autocomplete="off">
-    <div class="campo-targa sotto">
-      <div class="targa-box"><input id="in-tra" class="inp-targa" placeholder="FG456HJ" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false"></div>
-      <button class="btn-q cam" data-scan="in-tra" aria-label="Leggi la targa con la fotocamera"><svg class="ic"><use href="#i-cam"/></svg></button>
+    <div class="riq">
+      <div class="passo"><span class="n">1</span>Conducente e trattore</div>
+      <div id="freq" class="chips"></div>
+      <input id="in-aut" class="inp" placeholder="Cerca conducente (cognome)" autocomplete="off">
+      <div class="campo-targa sotto">
+        <div class="targa-box"><input id="in-tra" class="inp-targa" placeholder="FG456HJ" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false"></div>
+        <button class="btn-q cam" data-scan="in-tra" aria-label="Leggi la targa con la fotocamera"><svg class="ic"><use href="#i-cam"/></svg></button>
+      </div>
+      <div id="sugg-tra" class="sugg"></div>
     </div>
-    <div id="sugg-tra" class="sugg"></div>
 
-    <div class="passo"><span class="n">2</span>Rimorchio</div>
-    <div class="campo-targa">
-      <div class="targa-box"><input id="in-rim" class="inp-targa" placeholder="XB123CD" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false"></div>
-      <button class="btn-q cam" data-scan="in-rim" aria-label="Leggi la targa con la fotocamera"><svg class="ic"><use href="#i-cam"/></svg></button>
+    <div class="riq">
+      <div class="passo"><span class="n">2</span>Rimorchio</div>
+      <div class="campo-targa">
+        <div class="targa-box"><input id="in-rim" class="inp-targa" placeholder="XB123CD" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false"></div>
+        <button class="btn-q cam" data-scan="in-rim" aria-label="Leggi la targa con la fotocamera"><svg class="ic"><use href="#i-cam"/></svg></button>
+      </div>
+      <p class="aiuto">Targa rovinata? Scrivi solo le ultime cifre.</p>
+      <div id="stato-rim" class="stato" hidden></div>
+      <div id="sugg-rim" class="sugg"></div>
+      <button class="foto-slot foto-targa" id="fs-t"><svg class="ic"><use href="#i-cam"/></svg><strong>Foto targa rimorchio</strong></button>
+      <input type="file" id="file-t" accept="image/*" capture="environment" hidden>
+      <div class="sotto-et">Ditta</div>
+      <div id="ditta-in" class="chips"></div>
     </div>
-    <p class="aiuto">Targa rovinata? Scrivi solo le ultime cifre.</p>
-    <div id="stato-rim" class="stato" hidden></div>
-    <div id="sugg-rim" class="sugg"></div>
-
-    <div class="passo"><span class="n">3</span>Ditta del rimorchio</div>
-    <div id="ditta-in" class="chips"></div>
 
     <div class="scheda">
       <button class="scheda-testa" id="scheda-testa" aria-expanded="false" aria-controls="scheda-corpo">
-        <span class="n">4</span><span class="scheda-tit">Danni</span><span id="danni-stato" class="scheda-stato avv">Da indicare</span><svg class="ic chev"><use href="#i-next"/></svg>
+        <span class="n">3</span><span class="scheda-tit">Danni</span><span id="danni-stato" class="scheda-stato avv">Da indicare</span><svg class="ic chev"><use href="#i-next"/></svg>
       </button>
       <div id="scheda-corpo" hidden>
     <div class="foto2">

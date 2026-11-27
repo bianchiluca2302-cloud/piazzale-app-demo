@@ -229,3 +229,9 @@ body[data-vista=rimorchi] { --acc: var(--navy); --acc-ink: #fff; }
 .sede span { color: var(--muted); font-weight: 600; }
 .sede b { flex: 1; text-align: left; font-size: 24px; font-weight: 800; }
 .sede i { font-style: normal; font-weight: 700; color: var(--blu); }
+
+.riq { margin-top: 14px; padding: 14px; background: #fff; border: 2px solid var(--line); border-radius: 14px; }
+.riq .passo { margin: 0 0 12px; }
+.foto-targa { width: 100%; min-height: 84px; margin-top: 12px; flex-direction: row; gap: 10px; }
+.foto-targa.piena { min-height: 150px; justify-content: flex-end; align-items: flex-end; }
+.sotto-et { margin: 14px 0 8px; font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }

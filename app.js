@@ -131,9 +131,9 @@ function suggerisci(box, q, lista, scegli) {
 function stato(box, tipo, testo) { box.className = 'stato ' + tipo; box.textContent = testo; box.hidden = !testo; }
 
 // ---------- Ingresso ----------
-let danni = {}, foto = { l: null, v: null }, dannoScelta = null, dittaIn = '';
+let danni = {}, foto = { l: null, v: null }, dannoScelta = null, dittaIn = '', fotoTarga = null;
 function iniziaIngresso() {
-  danni = {}; foto = { l: null, v: null }; dannoScelta = null; ril = null; dittaIn = '';
+  danni = {}; foto = { l: null, v: null }; dannoScelta = null; ril = null; dittaIn = ''; fotoTarga = null; disegnaFotoTarga();
   ['in-rim', 'in-tra', 'in-aut'].forEach(i => $(i).value = '');
   $('dn-no').classList.remove('on'); $('dn-si').classList.remove('on'); $('blocco-danni').hidden = true;
   document.querySelectorAll('.zona').forEach(z => z.classList.remove('danno'));
@@ -293,6 +293,17 @@ function frequenti() {
     box.append(b);
   });
 }
+function disegnaFotoTarga() {
+  const b = $('fs-t'), u = fotoTarga;
+  b.className = 'foto-slot foto-targa' + (u ? ' piena' : '');
+  b.style.backgroundImage = u ? 'url(' + u + ')' : '';
+  b.replaceChildren(...(u ? [el('small', 'fs-et', 'Foto targa rimorchio')] : [ico('cam'), el('strong', '', 'Foto targa rimorchio')]));
+}
+$('fs-t').onclick = () => $('file-t').click();
+$('file-t').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try { fotoTarga = await riduci(f, 1000); disegnaFotoTarga(); aggiornaCta(); } catch (err) { toast('Foto non letta, riprova', 'ko'); }
+};
 function disegnaDittaIn() {
   const box = $('ditta-in'); box.replaceChildren();
   DITTE.forEach(d => box.append(bottone('chip' + (dittaIn === d.n ? ' on' : ''), d.n, () => { dittaIn = dittaIn === d.n ? '' : d.n; disegnaDittaIn(); })));
@@ -319,6 +330,7 @@ function aggiornaCta() {
   else if (haJolly(rim) || haJolly(tra)) manca = 'Sostituisci il ? con la lettera giusta';
   else if (norm(tra).length < 5) manca = 'Manca la targa del trattore';
   else if (norm(rim).length < 5) manca = 'Manca la targa del rimorchio';
+  else if (!fotoTarga) manca = 'Manca la foto della targa del rimorchio';
   else if (!dannoScelta) { manca = 'Indica se ci sono danni (tocca qui)'; neiDanni = true; }
   else if (dannoScelta === 'si' && !Object.keys(danni).length) { manca = 'Tocca sulla sagoma la parte danneggiata'; neiDanni = true; }
   else if (Object.values(danni).some(v => !v)) { manca = 'Scegli il tipo di ogni danno'; neiDanni = true; }
@@ -353,9 +365,9 @@ async function riduci(file, max = 1280) {
 }
 $('btn-salva-ingresso').onclick = () => {
   const rim = norm($('in-rim').value);
-  S.ingressi.push({ rim, tra: norm($('in-tra').value), aut: $('in-aut').value.trim(), danni: { ...danni }, ditta: dittaIn, foto: { ...foto }, nfoto: (foto.l ? 1 : 0) + (foto.v ? 1 : 0), ora: new Date().toISOString() });
+  S.ingressi.push({ rim, tra: norm($('in-tra').value), aut: $('in-aut').value.trim(), danni: { ...danni }, ditta: dittaIn, fotoTarga, foto: { ...foto }, nfoto: (foto.l ? 1 : 0) + (foto.v ? 1 : 0), ora: new Date().toISOString() });
   S.piazzale = S.piazzale.filter(p => p.rim !== rim).concat({ rim });
-  if (!salva()) { S.ingressi[S.ingressi.length - 1].foto = null; salva(); toast('Memoria piena: foto non salvate', 'ko'); }
+  if (!salva()) { Object.assign(S.ingressi[S.ingressi.length - 1], { foto: null, fotoTarga: null }); salva(); toast('Memoria piena: foto non salvate', 'ko'); }
   else toast('Ingresso registrato: ' + rim, 'ok');
   tornaHome();
 };
@@ -554,9 +566,9 @@ function apriRimorchio(rim) {
   nodi.push(el('div', 'sheet-sez', 'Danni'));
   if (!r.nd) nodi.push(dato('Danni', r.i ? 'Nessuno segnalato' : 'non noti'));
   else Object.entries(r.i.danni).forEach(([k, v]) => nodi.push(dato(k + ' · ' + (NOMI[k] || 'zona'), v || 'tipo da indicare')));
-  if (r.i && r.i.foto && (r.i.foto.l || r.i.foto.v)) {
-    const g = el('div', 'foto-det');
-    [['l', 'Foto lontano'], ['v', 'Foto vicino']].forEach(([w, n]) => { if (r.i.foto[w]) { const f = el('figure'), im = el('img'); im.src = r.i.foto[w]; im.alt = n; f.append(im, el('figcaption', '', n)); g.append(f); } });
+  if (r.i && ((r.i.foto && (r.i.foto.l || r.i.foto.v)) || r.i.fotoTarga)) {
+    const g = el('div', 'foto-det'), fs = Object.assign({ t: r.i.fotoTarga }, r.i.foto);
+    [['t', 'Targa rimorchio'], ['l', 'Foto lontano'], ['v', 'Foto vicino']].forEach(([w, n]) => { if (fs[w]) { const f = el('figure'), im = el('img'); im.src = fs[w]; im.alt = n; f.append(im, el('figcaption', '', n)); g.append(f); } });
     nodi.push(g);
   }
   nodi.push(el('div', 'sheet-sez', 'Giro piazzale'), dato('Controllo targa', r.giro ? 'Fatto' : 'Da fare'), bottone('cta-sec', 'Chiudi', chiudiSheet));
@@ -686,6 +698,7 @@ $('btn-scatta').onclick = async () => {
       if (t.length >= 3 && (!best || punti < best.punti || (punti === best.punti && t.length > best.t.length))) best = { t, punti };
     }
     if (!best) { msgScan('Non riesco a leggerla: avvicinati, accendi la torcia e riprova, oppure scrivi le ultime cifre.'); $('btn-scatta').disabled = false; return; }
+    if (campoScan === 'in-rim') { fotoTarga = scatti[0].c.toDataURL('image/jpeg', 0.8); disegnaFotoTarga(); }
     $(campoScan).value = best.t; $(campoScan).dispatchEvent(new Event('input'));
     chiudiScan();
   } catch (e) {
