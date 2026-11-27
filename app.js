@@ -46,7 +46,9 @@ const DITTE = [
   { n: 'Autotrasporti Ferrari', rif: 'BL-4490', conducenti: ['Ferrari Davide', 'Marino Gianni', 'Costa Elia'], rim: ['XF020KL', 'XG302MP'] },
   { n: 'Trasporti Bruni', rif: 'BL-4491', conducenti: ['Bruni Carlo', 'Neri Paolo'], rim: ['XH915QR'] }
 ];
-const dittaDi = rim => DITTE.find(d => d.rim.includes(rim)) || null;
+// la ditta di un rimorchio: dalle liste delle ditte, altrimenti da quella indicata all'ingresso
+const dittaDi = rim => DITTE.find(d => d.rim.includes(rim)) ||
+  DITTE.find(d => d.n === ([...S.ingressi].reverse().find(i => i.rim === rim && i.ditta) || {}).ditta) || null;
 // Arrivi dal porto: nel prodotto verrebbero dall'agenzia marittima o dal terminal (fonte da definire)
 const NAVI = [
   { nave: 'Nave demo Livorno 1', eta: '09:30', rim: 'XQ100AA', chi: 'Rossi Marco' },
@@ -129,14 +131,14 @@ function suggerisci(box, q, lista, scegli) {
 function stato(box, tipo, testo) { box.className = 'stato ' + tipo; box.textContent = testo; box.hidden = !testo; }
 
 // ---------- Ingresso ----------
-let danni = {}, foto = { l: null, v: null }, dannoScelta = null;
+let danni = {}, foto = { l: null, v: null }, dannoScelta = null, dittaIn = '';
 function iniziaIngresso() {
-  danni = {}; foto = { l: null, v: null }; dannoScelta = null; ril = null;
+  danni = {}; foto = { l: null, v: null }; dannoScelta = null; ril = null; dittaIn = '';
   ['in-rim', 'in-tra', 'in-aut'].forEach(i => $(i).value = '');
   $('dn-no').classList.remove('on'); $('dn-si').classList.remove('on'); $('blocco-danni').hidden = true;
   document.querySelectorAll('.zona').forEach(z => z.classList.remove('danno'));
   disegnaSlot(); $('foto-esito').replaceChildren(); impostaScheda(false); mostraVista(VISTE[0].id);
-  disegnaDanni(); frequenti(); aggiornaRim(); aggiornaTra(); aggiornaCta(); disegnaNavi();
+  disegnaDanni(); disegnaDittaIn(); frequenti(); aggiornaRim(); aggiornaTra(); aggiornaCta(); disegnaNavi();
 }
 const arrivato = rim => S.ingressi.some(i => i.rim === rim);
 function disegnaNavi() {
@@ -291,8 +293,14 @@ function frequenti() {
     box.append(b);
   });
 }
+function disegnaDittaIn() {
+  const box = $('ditta-in'); box.replaceChildren();
+  DITTE.forEach(d => box.append(bottone('chip' + (dittaIn === d.n ? ' on' : ''), d.n, () => { dittaIn = dittaIn === d.n ? '' : d.n; disegnaDittaIn(); })));
+}
 function aggiornaRim() {
   const q = $('in-rim').value, n = norm(q);
+  const dl = DITTE.find(d => d.rim.includes(n)); // targa gia' nelle liste di una ditta: si propone quella
+  if (dl && dittaIn !== dl.n) { dittaIn = dl.n; disegnaDittaIn(); }
   suggerisci($('sugg-rim'), q, rimNoti(), it => { $('in-rim').value = it.p; aggiornaRim(); aggiornaCta(); });
   if (n.length < 5 || haJolly(q)) return stato($('stato-rim'), '', '');
   if (S.piazzale.some(p => p.rim === n)) stato($('stato-rim'), 'avviso', 'Attenzione: questa targa risulta già in piazzale');
@@ -345,7 +353,7 @@ async function riduci(file, max = 1280) {
 }
 $('btn-salva-ingresso').onclick = () => {
   const rim = norm($('in-rim').value);
-  S.ingressi.push({ rim, tra: norm($('in-tra').value), aut: $('in-aut').value.trim(), danni: { ...danni }, foto: { ...foto }, nfoto: (foto.l ? 1 : 0) + (foto.v ? 1 : 0), ora: new Date().toISOString() });
+  S.ingressi.push({ rim, tra: norm($('in-tra').value), aut: $('in-aut').value.trim(), danni: { ...danni }, ditta: dittaIn, foto: { ...foto }, nfoto: (foto.l ? 1 : 0) + (foto.v ? 1 : 0), ora: new Date().toISOString() });
   S.piazzale = S.piazzale.filter(p => p.rim !== rim).concat({ rim });
   if (!salva()) { S.ingressi[S.ingressi.length - 1].foto = null; salva(); toast('Memoria piena: foto non salvate', 'ko'); }
   else toast('Ingresso registrato: ' + rim, 'ok');
@@ -539,7 +547,7 @@ function filtraRimorchi() {
 }
 function apriRimorchio(rim) {
   const r = schedaRim(rim), nodi = [el('div', 'sheet-tit', 'Dettaglio rimorchio'), targaEl(rim, 'grande'), el('div', 'sheet-sez', 'Ingresso')];
-  if (r.i) nodi.push(dato('Entrato alle', hh(r.i.ora)), dato('Conducente', r.i.aut || '—'), dato('Trattore', r.i.tra || '—'));
+  if (r.i) nodi.push(dato('Entrato alle', hh(r.i.ora)), dato('Conducente', r.i.aut || '—'), dato('Trattore', r.i.tra || '—'), dato('Ditta', (dittaDi(rim) || {}).n || 'non indicata'));
   else nodi.push(dato('Entrato', 'non registrato'));
   nodi.push(el('div', 'sheet-sez', 'Ritiro'), dato('Disponibile', r.att ? 'No, ritiro previsto' : 'Sì, nessun ritiro assegnato'));
   if (r.att) nodi.push(dato('Lo ritira', r.att.chi), dato('Riferimento', r.att.rif));
@@ -580,7 +588,7 @@ function disegnaInvio() {
 }
 function inviaReport() {
   const righe = ['tipo;targa_rimorchio;targa_trattore;persona;danni;nota;ora']
-    .concat(S.ingressi.map(i => ['INGRESSO', i.rim, i.tra, i.aut, Object.entries(i.danni).map(([k, v]) => k + ':' + v).join('|'), i.nfoto + ' foto', i.ora].join(';')))
+    .concat(S.ingressi.map(i => ['INGRESSO', i.rim, i.tra, i.aut, Object.entries(i.danni).map(([k, v]) => k + ':' + v).join('|'), [i.ditta, i.nfoto + ' foto'].filter(Boolean).join(' · '), i.ora].join(';')))
     .concat(S.uscite.map(u => ['USCITA', u.rim, '', u.chi, '', u.flag, u.ora].join(';')))
     .concat(S.intrusi.map(t => ['NON_IN_LISTA', t, '', '', '', '', ''].join(';')));
   const a = el('a'); a.href = URL.createObjectURL(new Blob(['﻿' + righe.join('\n')], { type: 'text/csv' }));
