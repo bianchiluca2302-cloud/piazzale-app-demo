@@ -45,9 +45,9 @@
       <button class="tile t-in" data-vai="ingresso"><svg class="ic"><use href="#i-in"/></svg><strong>Ingresso</strong><small>Registra un arrivo</small></button>
       <button class="tile t-out" data-vai="uscita"><svg class="ic"><use href="#i-out"/></svg><span class="bd-t" id="bd-uscita">0</span><strong>Uscita</strong><small>Verifica e consegna</small></button>
       <button class="tile t-giro" data-vai="giro"><svg class="ic"><use href="#i-giro"/></svg><span class="bd-t" id="bd-giro">0</span><strong>Giro piazzale</strong><small>Controllo targhe</small></button>
-      <button class="tile t-end" data-vai="invio"><svg class="ic"><use href="#i-send"/></svg><strong>Chiudi giornata</strong><small>Riepilogo e invio</small></button>
       <button class="tile t-rim" data-vai="rimorchi"><svg class="ic"><use href="#i-list"/></svg><span class="bd-t" id="bd-rim">0</span><strong>Rimorchi in piazzale</strong><small>Chi è entrato, chi lo ritira, danni</small></button>
     </div>
+    <button class="cta fondo" id="btn-chiudi-gg"><svg class="ic"><use href="#i-send"/></svg>Chiudi giornata</button>
     <p class="nota">Prototipo dimostrativo · dati inventati · restano sul telefono</p>
   </section>
 
@@ -136,7 +136,7 @@
   </section>
 
   <!-- RIMORCHI -->
-  <section id="v-rimorchi" class="vista con-barra" hidden>
+  <section id="v-rimorchi" class="vista" hidden>
     <div class="campo-targa sotto">
       <div class="targa-box"><input id="rm-cerca" class="inp-targa" placeholder="CERCA" autocapitalize="characters" autocomplete="off" autocorrect="off" spellcheck="false"></div>
       <button class="btn-q jolly" data-jolly="rm-cerca" aria-label="Lettera illeggibile">?</button>
@@ -144,7 +144,6 @@
     </div>
     <div class="titolo-sez"><span>Nel piazzale</span><span id="rm-cont"></span></div>
     <div id="rm-lista"></div>
-    <div class="barra-fondo"><button class="cta" id="btn-chiudi-gg"><svg class="ic"><use href="#i-send"/></svg>Chiudi giornata</button></div>
   </section>
 
   <!-- INVIO -->

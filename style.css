@@ -31,14 +31,15 @@ main { padding: 24px 14px 40px; }
 .stat { background: var(--panel); border: 2px solid var(--line); border-radius: 12px; padding: 10px 12px; }
 .stat b { display: block; font: 700 32px/1.1 var(--mono); }
 .stat span { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
-.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+#v-home { display: flex; flex-direction: column; min-height: calc(100vh - 110px); min-height: calc(100dvh - 110px); }
+.tiles { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-auto-rows: 1fr; gap: 12px; }
+.cta.fondo { background: var(--navy); color: #fff; margin-top: 14px; }
 .tile { position: relative; min-height: 150px; padding: 16px; border-radius: 18px; color: #fff; text-align: left; display: flex; flex-direction: column; justify-content: flex-end; box-shadow: 0 3px 0 rgba(0, 0, 0, .25); }
-.tile .ic { position: absolute; top: 14px; left: 14px; width: 40px; height: 40px; }
-.tile strong { font-size: 21px; }
-.tile small { font-size: 14px; opacity: .92; }
+.tile .ic { position: absolute; top: 16px; left: 16px; width: 52px; height: 52px; }
+.tile strong { font-size: 24px; }
+.tile small { font-size: 15px; opacity: .92; }
 .t-in { background: var(--verde); } .t-out { background: var(--arancio); } .t-giro { background: var(--blu); } .t-end { background: var(--navy); }
-.t-rim { grid-column: 1 / -1; min-height: 110px; background: #3b4a58; } .t-rim strong, .t-rim small { padding-left: 52px; }
-.t-rim .ic { top: auto; bottom: 16px; }
+.t-rim { background: #3b4a58; }
 .bd-t { position: absolute; top: 12px; right: 12px; min-width: 32px; height: 32px; padding: 0 9px; display: grid; place-items: center; background: #fff; color: var(--ink); border-radius: 16px; font: 700 17px var(--mono); }
 .nota { color: var(--muted); font-size: 13px; text-align: center; margin: 18px 0 0; }
 
@@ -205,9 +206,6 @@ main { padding: 24px 14px 40px; }
 
 /* Rimorchi in piazzale */
 body[data-vista=rimorchi] { --acc: var(--navy); --acc-ink: #fff; }
-.con-barra { padding-bottom: 96px; }
-.barra-fondo { position: fixed; left: 0; right: 0; bottom: 0; z-index: 9; padding: 10px 14px; padding-bottom: max(10px, env(safe-area-inset-bottom)); background: var(--bg); border-top: 2px solid var(--line); }
-.barra-fondo .cta { margin-top: 0; }
 .rm-stati { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .pill-s { padding: 2px 9px; border-radius: 99px; font-size: 12px; font-weight: 700; background: #dde3e8; color: #2f3d49; }
 .pill-s.ok { background: var(--verde); color: #fff; } .pill-s.avv { background: #ffe9b8; color: #6b4200; } .pill-s.ko { background: var(--rosso); color: #fff; }
