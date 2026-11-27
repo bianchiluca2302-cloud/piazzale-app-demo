@@ -41,6 +41,12 @@ const ATTESE = [
   { rim: 'XD555GH', chi: 'Conti Andrea', rif: 'BL-4475' },
   { rim: 'XE010IJ', chi: 'Greco Paolo', rif: 'BL-4480' }
 ];
+// Ritiri per ditta: l'azienda delega una lista di conducenti valida per tutti i suoi rimorchi, senza data ne' conducente unico
+const DITTE = [
+  { n: 'Autotrasporti Ferrari', rif: 'BL-4490', conducenti: ['Ferrari Davide', 'Marino Gianni', 'Costa Elia'], rim: ['XF020KL', 'XG302MP'] },
+  { n: 'Trasporti Bruni', rif: 'BL-4491', conducenti: ['Bruni Carlo', 'Neri Paolo'], rim: ['XH915QR'] }
+];
+const dittaDi = rim => DITTE.find(d => d.rim.includes(rim)) || null;
 // Arrivi dal porto: nel prodotto verrebbero dall'agenzia marittima o dal terminal (fonte da definire)
 const NAVI = [
   { nave: 'Nave demo Livorno 1', eta: '09:30', rim: 'XQ100AA', chi: 'Rossi Marco' },
@@ -49,7 +55,7 @@ const NAVI = [
   { nave: 'Nave demo Livorno 2', eta: '15:00', rim: 'XR200DD', chi: 'Conti Andrea' },
   { nave: 'Nave demo Livorno 2', eta: '15:00', rim: 'XR201EE', chi: '' }
 ];
-const DEMO_PIAZZALE = ['XB123CD', 'XC777EF', 'XD555GH', 'XE010IJ', 'XF020KL'];
+const DEMO_PIAZZALE = ['XB123CD', 'XC777EF', 'XD555GH', 'XE010IJ', 'XF020KL', 'XG302MP', 'XH915QR'];
 const RIM_NOTI = ['XA481BN', 'XG302MP', 'XH915QR', 'XL660ST', 'XM142UV', 'XN873WZ', 'XP207AB', ...DEMO_PIAZZALE];
 
 const KEY = 'piazzale-v2';
@@ -349,20 +355,33 @@ $('btn-salva-ingresso').onclick = () => {
 // ---------- Uscita ----------
 function disegnaUscita() { $('ex-cerca').value = ''; filtraUscita(); }
 function filtraUscita() {
-  const q = $('ex-cerca').value, lista = $('attese'), es = $('ex-esito');
-  lista.replaceChildren(); es.replaceChildren();
+  const q = $('ex-cerca').value, lista = $('attese'), es = $('ex-esito'), dl = $('ditte');
+  lista.replaceChildren(); es.replaceChildren(); dl.replaceChildren();
+  const filtra = normJolly(q).length >= 2;
   let righe = ATT().map(it => ({ it, s: 0 }));
-  if (normJolly(q).length >= 2) righe = trova(q, ATT());
+  if (filtra) righe = trova(q, ATT());
   righe.sort((x, y) => uscito(x.it.p) - uscito(y.it.p) || x.s - y.s);
   $('ex-cont').textContent = ATTESE.filter(a => !uscito(a.rim)).length + ' da fare';
   righe.forEach(({ it, s }) => {
     const b = el('button', 'card att' + (uscito(it.p) ? ' fatta' : '')), d = el('div', 'dett');
-    d.append(el('b', '', it.a.chi), el('small', '', 'Rif. ' + it.a.rif + (normJolly(q).length >= 2 && s ? ' · ' + motivo(s) : '')));
+    d.append(el('b', '', it.a.chi), el('small', '', 'Rif. ' + it.a.rif + (filtra && s ? ' · ' + motivo(s) : '')));
     b.append(targaEl(it.p), d, uscito(it.p) ? el('span', 'tag', 'Uscito') : ico('next'));
     b.onclick = () => { if (!uscito(it.p)) apriUscita(it.a); };
     lista.append(b);
   });
-  if (normJolly(q).length >= 3 && !righe.length) {
+  // Ritiri per ditta: rimorchi in piazzale che una ditta puo' far ritirare a un conducente della sua lista, senza data
+  const dit = S.piazzale.filter(p => dittaDi(p.rim) && !ATTESE.some(a => a.rim === p.rim)).map(p => ({ p: p.rim, d: dittaDi(p.rim) }));
+  const rd = filtra ? trova(q, dit) : dit.map(it => ({ it, s: 0 }));
+  $('dt-cont').textContent = dit.length + ' in piazzale';
+  $('dt-sez').hidden = !dit.length;
+  rd.forEach(({ it, s }) => {
+    const b = el('button', 'card att'), d = el('div', 'dett');
+    d.append(el('b', '', it.d.n), el('small', '', 'Rif. ' + it.d.rif + (filtra && s ? ' · ' + motivo(s) : '')));
+    b.append(targaEl(it.p), d, ico('next'));
+    b.onclick = () => apriUscitaDitta(it.p, it.d);
+    dl.append(b);
+  });
+  if (normJolly(q).length >= 3 && !righe.length && !rd.length) {
     const ban = el('div', 'banner rosso', '✖ NON AUTORIZZATO');
     ban.append(el('small', '', 'Nessuna uscita prevista per «' + normJolly(q) + '»' + (trova(q, S.piazzale.map(p => ({ p: p.rim }))).length ? ' (è in piazzale, ma non tra le uscite di oggi)' : '')));
     es.append(ban);
@@ -377,6 +396,27 @@ function apriUscita(att) {
     bottone('cta-sec', 'Si presenta un altro conducente', () => apriDiverso(att)),
     bottone('cta-sec', 'Annulla', chiudiSheet));
 }
+// Ritiro per ditta: si sceglie chi si presenta tra i conducenti delegati; chi non e' in lista esce segnalato
+function apriUscitaDitta(rim, d) {
+  let scelto = '';
+  const ok = bottone('cta verde', 'Conferma uscita', () => confermaUscita({ rim, chi: d.n + ' (delega)', rif: d.rif }, scelto, ''), 'check');
+  ok.disabled = true;
+  const ch = el('div', 'chips');
+  d.conducenti.forEach(n => {
+    const c = bottone('chip', n, () => { scelto = n; ch.querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x === c)); ok.disabled = false; });
+    ch.append(c);
+  });
+  apriSheet(el('div', 'sheet-tit', 'Controlla i documenti'), targaEl(rim, 'grande'), dato('Ditta', d.n), dato('Riferimento', d.rif),
+    el('div', 'sheet-sez', 'Chi si presenta?'), ch, ok,
+    bottone('cta-sec', 'Non è nella lista', () => apriFuoriLista(rim, d)), bottone('cta-sec', 'Annulla', chiudiSheet));
+}
+function apriFuoriLista(rim, d) {
+  const ban = el('div', 'banner arancio', '⚠ Conducente non in lista'); ban.append(el('small', '', d.n + ' · rif. ' + d.rif));
+  const inp = el('input', 'inp'); inp.placeholder = 'Cognome Nome di chi si presenta';
+  const ok = bottone('cta arancio', 'Conferma uscita fuori lista', () => confermaUscita({ rim, chi: d.n + ' (delega)', rif: d.rif }, inp.value.trim(), 'conducente non in lista'), 'warn');
+  ok.disabled = true; inp.oninput = () => ok.disabled = !inp.value.trim();
+  apriSheet(ban, el('div', 'sheet-tit', 'Chi si presenta?'), inp, ok, bottone('cta-sec', 'Indietro', () => apriUscitaDitta(rim, d)));
+}
 function apriDiverso(att) {
   const ban = el('div', 'banner arancio', '⚠ Conducente diverso'); ban.append(el('small', '', 'Atteso: ' + att.chi + ' · rif. ' + att.rif));
   const inp = el('input', 'inp'); inp.placeholder = 'Cognome Nome di chi si presenta';
@@ -389,7 +429,7 @@ function apriDiverso(att) {
 function confermaUscita(att, chi, flag) {
   S.uscite.push({ rim: att.rim, chi, atteso: att.chi, flag, ora: new Date().toISOString() });
   S.piazzale = S.piazzale.filter(p => p.rim !== att.rim);
-  salva(); chiudiSheet(); toast('Uscita registrata: ' + att.rim + (flag ? ' (conducente diverso)' : ''), 'ok');
+  salva(); chiudiSheet(); toast('Uscita registrata: ' + att.rim + (flag ? ' (' + flag + ')' : ''), 'ok');
   $('ex-cerca').value = ''; filtraUscita();
 }
 
@@ -453,12 +493,14 @@ const INGRESSI_DEMO = {
   XC777EF: { aut: 'Esposito Ciro', tra: 'FH902MN', ora: ORA('08:15'), danni: { 15: 'Graffio' } },
   XD555GH: { aut: 'Conti Andrea', tra: 'EZ118PQ', ora: ORA('06:55'), danni: {} },
   XE010IJ: { aut: 'Greco Paolo', tra: 'FJ330RT', ora: ORA('08:50'), danni: { 21: 'Ammaccatura', 3: 'Rottura' } },
-  XF020KL: { aut: 'Ferrari Davide', tra: 'GA221KL', ora: ORA('05:30'), danni: {} }
+  XF020KL: { aut: 'Ferrari Davide', tra: 'GA221KL', ora: ORA('05:30'), danni: {} },
+  XG302MP: { aut: 'Marino Gianni', tra: 'FM410AB', ora: ORA('06:20'), danni: {} },
+  XH915QR: { aut: 'Bruni Carlo', tra: 'FN520CD', ora: ORA('07:05'), danni: {} }
 };
 const hh = ts => new Date(ts).toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
 function schedaRim(rim) {
   const i = [...S.ingressi].reverse().find(x => x.rim === rim) || INGRESSI_DEMO[rim] || null;
-  const att = ATTESE.find(a => a.rim === rim && !uscito(rim)) || null;
+  const dt = dittaDi(rim), att = uscito(rim) ? null : (ATTESE.find(a => a.rim === rim) || (dt ? { chi: dt.n + ' (delega)', rif: dt.rif } : null));
   return { i, att, nd: i ? Object.keys(i.danni).length : 0, giro: S.giro.includes(rim) };
 }
 function disegnaRimorchi() { $('rm-cerca').value = ''; filtraRimorchi(); }
